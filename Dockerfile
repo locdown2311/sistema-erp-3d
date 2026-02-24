@@ -25,6 +25,7 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Instala extensões do PHP necessárias para o Laravel
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip pdo_sqlite
+RUN pecl install redis && docker-php-ext-enable redis
 
 # Configura e habilita o mod_rewrite do Apache
 RUN a2enmod rewrite
@@ -57,20 +58,16 @@ RUN chown -R www-data:www-data /var/www/html
 RUN chmod -R 775 /var/www/html/storage
 RUN chmod -R 775 /var/www/html/bootstrap/cache
 
-# Cria as pastas de SQLite (database) para serem persistidas corretamente e aplica permissões
-RUN mkdir -p /var/www/html/database
-RUN touch /var/www/html/database/database.sqlite
-RUN chown -R www-data:www-data /var/www/html/database
-RUN chmod -R 775 /var/www/html/database
+# Cria pasta storage persistente
+RUN mkdir -p /var/www/html/storage/app/public
 
 EXPOSE 80
 
 # Script de entrypoint embutido para rodar chown na montagem do volume
 COPY --chmod=755 <<-"EOF" /usr/local/bin/entrypoint.sh
 #!/bin/sh
-# Ajusta permissões dos volumes se estiverem root (caso montados em Windows)
+# Ajusta permissões do storage
 chown -R www-data:www-data /var/www/html/storage
-chown -R www-data:www-data /var/www/html/database
 exec apache2-foreground
 EOF
 
