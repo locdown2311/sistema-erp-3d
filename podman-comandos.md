@@ -20,8 +20,8 @@ podman-compose up -d --build
 ```
 *Isso vai baixar a imagem do PHP, instalar pacotes (.deb e composer), as dependências do Node (Vite), copiar o código e iniciar o container em background (`-d`). Pode demorar alguns minutos na primeira vez.*
 
-### Passo B: Banco de Dados e Permissões Iniciais
-Como o sistema usa SQLite via volume persistente, precisamos criar/migrar as tabelas pela primeira vez dentro do container:
+### Passo B: Gerar chave, Banco de Dados e Permissões Iniciais
+Como o sistema usa SQLite via volume persistente, precisamos criar a chave de criptografia e rodar as tabelas pela primeira vez dentro do container:
 
 ```bash
 # Rodar as migrations (cria as tabelas no banco de dados vazio)
