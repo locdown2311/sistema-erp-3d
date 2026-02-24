@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $store->store_name }} — Loja</title>
+    <meta property="og:title" content="{{ $store->store_name }} — Loja">
+    <meta property="og:site_name" content="{{ $store->store_name }}">
+    @if($store->store_logo)
+        <meta property="og:image" content="{{ asset('storage/' . $store->store_logo) }}">
+        <meta property="twitter:image" content="{{ asset('storage/' . $store->store_logo) }}">
+    @endif
+    <meta property="twitter:card" content="summary_large_image">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
