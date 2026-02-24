@@ -42,7 +42,7 @@ COPY . /var/www/html
 # Ajusta o DocumentRoot do Apache para a pasta public do Laravel
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+RUN sed -ri -e 's!/var/www/!/var/www/html/!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 # Instala dependências do PHP (ignora platform reqs caso falte algo na imagem base que o sail usaria)
 RUN composer install --no-interaction --optimize-autoloader --no-dev
