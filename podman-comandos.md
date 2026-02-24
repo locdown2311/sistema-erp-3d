@@ -5,7 +5,7 @@ Nessa abordagem **não usamos** o `compose`. Criamos os containers conectando-os
 
 ## Pré-requisitos
 - Ter o [Podman Desktop](https://podman-desktop.io/) ou `podman` instalado.
-- Certificar-se que a porta `8000` está livre.
+- Certificar-se que a porta `8123` está livre.
 
 ---
 
@@ -33,7 +33,7 @@ podman run -d --pod erp-pod --name erp-db \
   -v erp-db:/var/lib/mysql \
   -e MYSQL_DATABASE=erp_3d \
   -e MYSQL_USER=erp_user \
-  -e MYSQL_PASSWORD=Igorcg23. \
+  -e MYSQL_PASSWORD=Igorcg23 \
   -e MYSQL_ROOT_PASSWORD=Ic2396g. \
   docker.io/mariadb:10.11
 ```
