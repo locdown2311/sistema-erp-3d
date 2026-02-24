@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: erp-3d-app
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - APP_KEY=${APP_KEY}
+      - APP_DEBUG=${APP_DEBUG:-false}
+      - APP_URL=${APP_URL:-http://localhost:8000}
+      - DB_CONNECTION=sqlite
+      # Opcional: Se precisar alterar a senha padrão ou afins, defina no seu .env da máquina host.
+    volumes:
+      # Persiste o banco de dados principal SQLite
+      - erp-db:/var/www/html/database
+      # Persiste os arquivos estáticos upados pelos clientes e lojista
+      - erp-storage:/var/www/html/storage/app/public
+      # (Opcional) descomente se quiser usar o storage/logs persistido:
+      # - erp-logs:/var/www/html/storage/logs
+
+volumes:
+  erp-db:
+  erp-storage:
+  erp-logs:
