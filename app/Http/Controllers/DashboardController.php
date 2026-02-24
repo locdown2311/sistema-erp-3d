@@ -23,7 +23,7 @@ class DashboardController extends Controller
         $salesChart = Sale::where('user_id', $userId)
             ->where('status', 'completed')
             ->where('sale_date', '>=', now()->subDays(30))
-            ->selectRaw("strftime('%Y-%m-%d', sale_date) as date, SUM(total) as total")
+            ->selectRaw("DATE(sale_date) as date, SUM(total) as total")
             ->groupBy('date')
             ->orderBy('date')
             ->get();
