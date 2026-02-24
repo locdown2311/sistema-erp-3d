@@ -33,7 +33,7 @@ podman run -d --pod erp-pod --name erp-db \
   -v erp-db:/var/lib/mysql \
   -e MYSQL_DATABASE=erp_3d \
   -e MYSQL_USER=erp_user \
-  -e MYSQL_PASSWORD=Igorcg23 \
+  -e MYSQL_PASSWORD=secret \
   -e MYSQL_ROOT_PASSWORD=Ic2396g. \
   docker.io/mariadb:10.11
 ```
