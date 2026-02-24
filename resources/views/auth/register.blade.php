@@ -177,6 +177,20 @@
                 <textarea name="store_description" class="form-control" style="min-height: 60px;" placeholder="Conte sobre sua loja...">{{ old('store_description') }}</textarea>
             </div>
 
+            <div class="section-title"><i class="fas fa-shield-alt"></i> Verificação de Segurança</div>
+            <div class="form-group">
+                <label class="form-label">Resolva a conta</label>
+                <div style="margin-bottom: var(--space-xs); display: flex; align-items: center; gap: var(--space-sm);">
+                    <div class="captcha-img" style="border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); background: #fff;">
+                        {!! captcha_img('math') !!}
+                    </div>
+                    <button type="button" class="btn btn-outline" style="padding: 0.5rem; border-color: var(--border);" onclick="document.querySelector('.captcha-img img').src = '/captcha/math?' + Math.random()" title="Recarregar Captcha">
+                        <i class="fas fa-sync-alt" style="color: var(--text-muted);"></i>
+                    </button>
+                </div>
+                <input type="text" name="captcha" class="form-control" required placeholder="Digite o resultado">
+            </div>
+
             <button type="submit" class="btn btn-success" style="width: 100%; justify-content: center; padding: 0.7rem;">
                 <i class="fas fa-rocket"></i> Criar Loja
             </button>

@@ -97,6 +97,19 @@
                 <input type="password" name="password" class="form-control" required placeholder="••••••••">
             </div>
 
+            <div class="form-group">
+                <label class="form-label">Verificação de Segurança</label>
+                <div style="margin-bottom: var(--space-xs); display: flex; align-items: center; gap: var(--space-sm);">
+                    <div class="captcha-img" style="border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); background: #fff;">
+                        {!! captcha_img('math') !!}
+                    </div>
+                    <button type="button" class="btn btn-outline" style="padding: 0.5rem; border-color: var(--border);" onclick="document.querySelector('.captcha-img img').src = '/captcha/math?' + Math.random()" title="Recarregar Captcha">
+                        <i class="fas fa-sync-alt" style="color: var(--text-muted);"></i>
+                    </button>
+                </div>
+                <input type="text" name="captcha" class="form-control" required placeholder="Resolva a conta acima">
+            </div>
+
             <div class="form-check" style="margin-bottom: var(--space-lg);">
                 <input type="checkbox" name="remember" id="remember">
                 <label for="remember" class="form-label" style="margin: 0;">Lembrar de mim</label>
