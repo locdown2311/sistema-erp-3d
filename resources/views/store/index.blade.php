@@ -9,6 +9,7 @@
     @if($store->store_logo)
         <meta property="og:image" content="{{ asset('storage/' . $store->store_logo) }}">
         <meta property="twitter:image" content="{{ asset('storage/' . $store->store_logo) }}">
+        <link rel="icon" href="{{ asset('storage/' . $store->store_logo) }}">
     @endif
     <meta property="twitter:card" content="summary_large_image">
     <link rel="preconnect" href="https://fonts.googleapis.com">
