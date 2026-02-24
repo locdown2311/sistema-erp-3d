@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'ERP 3D Print') — {{ \App\Models\Setting::get('company_name', 'ERP Impressão 3D') }}</title>
+    <title>@yield('title', 'Central 3D') — {{ \App\Models\Setting::get('company_name', 'ERP Impressão 3D') }}</title>
     @if(auth()->check() && auth()->user()->store_logo)
         <link rel="icon" href="{{ asset('storage/' . auth()->user()->store_logo) }}">
     @endif
