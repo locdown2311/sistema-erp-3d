@@ -8,8 +8,25 @@
         <h3 class="card-title"><i class="fas fa-cog" style="margin-right: 8px; color: var(--primary-light);"></i>Configurações Gerais</h3>
     </div>
 
-    <form method="POST" action="{{ route('settings.update') }}">
+    <form method="POST" action="{{ route('settings.update') }}" enctype="multipart/form-data">
         @csrf
+
+        <div class="form-group" style="margin-bottom: var(--space-lg); padding-bottom: var(--space-md); border-bottom: 1px solid var(--border);">
+            <label class="form-label">Logo da Loja</label>
+            <div style="display: flex; align-items: center; gap: var(--space-md);">
+                <div style="width: 80px; height: 80px; border-radius: var(--radius-md); border: 1px dashed var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--bg-body);">
+                    @if($user->store_logo)
+                        <img src="{{ asset('storage/' . $user->store_logo) }}" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;">
+                    @else
+                        <i class="fas fa-store" style="font-size: 2rem; color: var(--text-muted);"></i>
+                    @endif
+                </div>
+                <div style="flex: 1;">
+                    <input type="file" name="store_logo" class="form-control" accept="image/*">
+                    <small style="color: var(--text-muted); display: block; margin-top: var(--space-xs);">Tamanho recomendado: 500x500px (JPG ou PNG). Enviar uma nova imagem substituirá a atual.</small>
+                </div>
+            </div>
+        </div>
 
         <div class="form-group">
             <label class="form-label">Nome da Empresa</label>

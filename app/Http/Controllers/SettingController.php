@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class SettingController extends Controller
 {
@@ -41,7 +42,23 @@ class SettingController extends Controller
 
         // Save store colors directly on user
         $user = auth()->user();
-        $user->update($request->only('store_color_primary', 'store_color_accent'));
+        $userData = $request->only('store_color_primary', 'store_color_accent');
+
+        if ($request->hasFile('store_logo')) {
+            $request->validate([
+                'store_logo' => 'image|max:2048', // 2MB max
+            ]);
+
+            // Delete old logo to free up space
+            if ($user->store_logo && Storage::disk('public')->exists($user->store_logo)) {
+                Storage::disk('public')->delete($user->store_logo);
+            }
+
+            // Save new logo
+            $userData['store_logo'] = $request->file('store_logo')->store('logos', 'public');
+        }
+
+        $user->update($userData);
 
         return redirect()->route('settings.index')
             ->with('success', 'Configurações salvas com sucesso!');
