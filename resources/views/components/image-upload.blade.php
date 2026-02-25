@@ -1,49 +1,72 @@
 {{-- Image Upload Zone with Paste (Ctrl+V) and Crop --}}
 @props(['name' => 'image', 'currentImage' => null])
 
-<div class="form-group">
-    <label class="form-label">Imagem</label>
+<div class="mb-5 relative">
+    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Imagem</label>
 
     {{-- Drop/Paste Zone --}}
-    <div id="imageDropZone" style="border: 2px dashed var(--border); border-radius: var(--radius-md); padding: var(--space-lg); text-align: center; cursor: pointer; transition: all 0.2s; background: var(--bg-input); position: relative;"
+    <div id="imageDropZone" class="border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-xl p-6 text-center cursor-pointer transition-colors bg-zinc-50 dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-900 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 relative"
          onclick="document.getElementById('imageFileInput').click()">
 
-        <div id="imagePreviewArea" style="{{ $currentImage ? '' : 'display:none;' }}">
+        <div id="imagePreviewArea" class="{{ $currentImage ? 'block' : 'hidden' }}">
             <img id="imagePreview" src="{{ $currentImage ? asset('storage/' . $currentImage) : '' }}"
-                 style="max-width: 100%; max-height: 200px; border-radius: var(--radius-md); margin-bottom: 8px;">
-            <div style="font-size: 0.75rem; color: var(--text-muted);">Clique ou cole (Ctrl+V) para trocar</div>
+                 class="max-w-full max-h-48 mx-auto rounded-lg mb-2 object-contain bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm">
+            <div class="text-xs text-zinc-500 dark:text-zinc-400">Clique ou cole (Ctrl+V) para trocar</div>
         </div>
 
-        <div id="imagePlaceholder" style="{{ $currentImage ? 'display:none;' : '' }}">
-            <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--text-muted); margin-bottom: 8px;"></i>
-            <div style="font-size: 0.85rem; color: var(--text-secondary);">Clique para selecionar, arraste ou <strong>cole (Ctrl+V)</strong></div>
-            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">PNG, JPG, WEBP</div>
+        <div id="imagePlaceholder" class="{{ $currentImage ? 'hidden' : 'block' }}">
+            <i class="fas fa-cloud-upload-alt text-3xl text-zinc-400 dark:text-zinc-500 mb-2"></i>
+            <div class="text-sm text-zinc-600 dark:text-zinc-400">Clique para selecionar, arraste ou <strong class="text-zinc-900 dark:text-white font-medium">cole (Ctrl+V)</strong></div>
+            <div class="text-xs text-zinc-500 dark:text-zinc-500 mt-1">PNG, JPG, WEBP</div>
         </div>
     </div>
 
-    <input type="file" id="imageFileInput" name="{{ $name }}" accept="image/*" style="display: none;" onchange="handleImageSelected(this)">
+    <input type="file" id="imageFileInput" name="{{ $name }}" accept="image/*" class="sr-only" onchange="handleImageSelected(this)">
     <input type="hidden" id="croppedImageData" name="cropped_image">
 </div>
 
 {{-- Crop Modal --}}
-<div class="modal-overlay" id="cropModal">
-    <div class="modal" style="max-width: 600px;">
-        <div class="modal-header">
-            <h3 class="modal-title"><i class="fas fa-crop-alt" style="margin-right: 8px; color: var(--primary-light);"></i>Recortar Imagem</h3>
-            <button class="modal-close" onclick="cancelCrop()"><i class="fas fa-times"></i></button>
-        </div>
-        <div style="max-height: 400px; overflow: hidden;">
-            <img id="cropImage" style="max-width: 100%; display: block;">
-        </div>
-        <div class="modal-footer" style="justify-content: space-between;">
-            <div style="display: flex; gap: 6px;">
-                <button type="button" class="btn btn-outline btn-sm" onclick="cropperRotate(-90)" title="Girar esquerda"><i class="fas fa-undo"></i></button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="cropperRotate(90)" title="Girar direita"><i class="fas fa-redo"></i></button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="cropperFlipH()" title="Espelhar H"><i class="fas fa-arrows-alt-h"></i></button>
+<div id="cropModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-[100] w-full p-4 overflow-x-hidden overflow-y-auto bg-zinc-900/50 dark:bg-zinc-900/80 backdrop-blur-sm shadow-sm md:inset-0 h-[calc(100%-1rem)] max-h-full flex items-center justify-center">
+    <div class="relative w-full max-w-2xl max-h-full">
+        <!-- Modal content -->
+        <div class="relative bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800 flex flex-col max-h-[90vh]">
+            <!-- Modal header -->
+            <div class="flex items-start justify-between p-5 border-b border-zinc-200 dark:border-zinc-800 rounded-t-xl bg-zinc-50/50 dark:bg-zinc-800/50">
+                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
+                    <i class="fas fa-crop-alt text-indigo-500"></i> Recortar Imagem
+                </h3>
+                <button type="button" onclick="cancelCrop()" class="text-zinc-400 bg-transparent hover:bg-zinc-200 hover:text-zinc-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark:hover:bg-zinc-700 dark:hover:text-white transition-colors">
+                    <i class="fas fa-times"></i>
+                    <span class="sr-only">Fechar</span>
+                </button>
             </div>
-            <div style="display: flex; gap: 8px;">
-                <button type="button" class="btn btn-outline" onclick="skipCrop()"><i class="fas fa-forward"></i> Usar Original</button>
-                <button type="button" class="btn btn-success" onclick="applyCrop()"><i class="fas fa-check"></i> Recortar</button>
+            <!-- Modal body -->
+            <div class="p-4 sm:p-5 flex-1 overflow-hidden flex items-center justify-center bg-zinc-100 dark:bg-zinc-950 py-6 min-h-[300px]">
+                <div class="w-full max-h-[50vh] flex items-center justify-center">
+                    <img id="cropImage" class="max-w-full max-h-[50vh] block">
+                </div>
+            </div>
+            <!-- Modal footer -->
+            <div class="flex flex-col sm:flex-row items-center justify-between p-5 border-t border-zinc-200 dark:border-zinc-800 rounded-b-xl gap-4 bg-white dark:bg-zinc-900">
+                <div class="flex gap-2">
+                    <button type="button" class="inline-flex items-center justify-center w-10 h-10 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-sm font-medium rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-zinc-900" onclick="cropperRotate(-90)" title="Girar esquerda">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                    <button type="button" class="inline-flex items-center justify-center w-10 h-10 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-sm font-medium rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-zinc-900" onclick="cropperRotate(90)" title="Girar direita">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                    <button type="button" class="inline-flex items-center justify-center w-10 h-10 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-sm font-medium rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-zinc-900" onclick="cropperFlipH()" title="Espelhar Horizontalmente">
+                        <i class="fas fa-arrows-alt-h"></i>
+                    </button>
+                </div>
+                <div class="flex gap-3 w-full sm:w-auto">
+                    <button type="button" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-sm font-medium rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors shadow-sm" onclick="skipCrop()">
+                        <i class="fas fa-forward"></i> Usar Original
+                    </button>
+                    <button type="button" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 dark:focus:ring-offset-zinc-900" onclick="applyCrop()">
+                        <i class="fas fa-check"></i> Recortar
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -75,17 +98,17 @@ const dropZone = document.getElementById('imageDropZone');
 if (dropZone) {
     dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
-        dropZone.style.borderColor = 'var(--primary-light)';
-        dropZone.style.background = 'rgba(22, 163, 74, 0.05)';
+        dropZone.classList.add('border-indigo-500', 'bg-indigo-50', 'dark:bg-indigo-500/10');
+        dropZone.classList.remove('border-zinc-300', 'dark:border-zinc-700', 'bg-zinc-50', 'dark:bg-zinc-950');
     });
     dropZone.addEventListener('dragleave', () => {
-        dropZone.style.borderColor = 'var(--border)';
-        dropZone.style.background = 'var(--bg-input)';
+        dropZone.classList.remove('border-indigo-500', 'bg-indigo-50', 'dark:bg-indigo-500/10');
+        dropZone.classList.add('border-zinc-300', 'dark:border-zinc-700', 'bg-zinc-50', 'dark:bg-zinc-950');
     });
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
-        dropZone.style.borderColor = 'var(--border)';
-        dropZone.style.background = 'var(--bg-input)';
+        dropZone.classList.remove('border-indigo-500', 'bg-indigo-50', 'dark:bg-indigo-500/10');
+        dropZone.classList.add('border-zinc-300', 'dark:border-zinc-700', 'bg-zinc-50', 'dark:bg-zinc-950');
         const file = e.dataTransfer.files[0];
         if (file && file.type.startsWith('image/')) {
             openCropModal(file);
@@ -106,7 +129,12 @@ function openCropModal(file) {
         const img = document.getElementById('cropImage');
         img.src = e.target.result;
 
-        document.getElementById('cropModal').classList.add('active');
+        const modal = document.getElementById('cropModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        
+        // Prevent body scroll
+        document.body.style.overflow = 'hidden';
 
         // Destroy previous cropper
         if (cropper) { cropper.destroy(); cropper = null; }
@@ -152,8 +180,10 @@ function setImagePreview(blob) {
     // Set preview
     const url = URL.createObjectURL(blob);
     document.getElementById('imagePreview').src = url;
-    document.getElementById('imagePreviewArea').style.display = 'block';
-    document.getElementById('imagePlaceholder').style.display = 'none';
+    document.getElementById('imagePreviewArea').classList.remove('hidden');
+    document.getElementById('imagePreviewArea').classList.add('block');
+    document.getElementById('imagePlaceholder').classList.add('hidden');
+    document.getElementById('imagePlaceholder').classList.remove('block');
 
     // Convert to base64 and store in hidden input
     const reader = new FileReader();
@@ -171,7 +201,13 @@ function cancelCrop() {
 }
 
 function closeCropModal() {
-    document.getElementById('cropModal').classList.remove('active');
+    const modal = document.getElementById('cropModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    
+    // Restore body scroll
+    document.body.style.overflow = '';
+    
     if (cropper) { cropper.destroy(); cropper = null; }
 }
 

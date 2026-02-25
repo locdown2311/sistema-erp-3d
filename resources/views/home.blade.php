@@ -1,314 +1,194 @@
 @extends('layouts.app')
 
-@section('page-title', 'O Marketplace Definitivo da Impressão 3D')
+@section('page-title', 'Central3D — O Marketplace da Impressão 3D')
+
+@section('hide_sidebar', true)
+@section('hide_header', true)
 
 @section('content')
-<style>
-    /* Public Home Layout Fixes to align with app.blade.php structure */
-    body { padding-top: 20px; }
-    .sidebar { display: none !important; }
-    .main-content { margin: 0 auto !important; max-width: 100% !important; width: 100%; padding: 0 2rem !important; }
-    
-    .hero-section {
-        background: linear-gradient(135deg, var(--primary), var(--accent));
-        color: white;
-        border-radius: var(--radius-lg);
-        padding: 4rem 2rem;
-        text-align: center;
-        margin-bottom: var(--space-xl);
-        position: relative;
-        overflow: hidden;
-    }
-    .hero-title {
-        font-size: 2.5rem;
-        font-weight: 800;
-        margin-bottom: 1rem;
-        line-height: 1.2;
-    }
-    .hero-subtitle {
-        font-size: 1.1rem;
-        opacity: 0.9;
-        margin-bottom: 2rem;
-        max-width: 600px;
-        margin-inline: auto;
-    }
-    .hero-buttons {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-    .btn-hero {
-        background: white;
-        color: var(--primary);
-        font-weight: 700;
-        padding: 0.8rem 1.5rem;
-        border-radius: var(--radius-md);
-        text-decoration: none;
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .btn-hero:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-    .btn-hero-outline {
-        background: transparent;
-        color: white;
-        border: 2px solid white;
-    }
 
-    .section-header {
-        display: flex;
-        align-items: center;
-        margin-bottom: var(--space-lg);
-        gap: var(--space-sm);
-    }
-    .section-header h2 {
-        font-size: 1.5rem;
-        font-weight: 700;
-        margin: 0;
-        color: var(--text-color);
-    }
-
-    .store-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: var(--space-md);
-        margin-bottom: var(--space-xl);
-    }
-    
-    .store-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        padding: var(--space-md);
-        text-align: center;
-        transition: transform 0.2s, box-shadow 0.2s;
-        text-decoration: none;
-        color: inherit;
-        display: block;
-    }
-    .store-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 24px var(--shadow-color);
-        border-color: var(--primary-light);
-    }
-    .store-logo {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        object-fit: cover;
-        margin-bottom: var(--space-sm);
-        border: 2px solid var(--border);
-        background: var(--bg-body);
-    }
-    .store-name {
-        font-weight: 700;
-        font-size: 1.1rem;
-        margin-bottom: var(--space-xs);
-    }
-    .store-upvotes {
-        color: var(--accent);
-        font-weight: 600;
-        font-size: 0.9rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.3rem;
-    }
-
-    .offer-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: var(--space-md);
-        margin-bottom: var(--space-xl);
-    }
-    .offer-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        overflow: hidden;
-        transition: transform 0.2s, box-shadow 0.2s;
-        display: flex;
-        flex-direction: column;
-    }
-    .offer-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 24px var(--shadow-color);
-    }
-    .offer-img-container {
-        height: 180px;
-        background: var(--bg-body);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        position: relative;
-    }
-    .offer-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    .offer-content {
-        padding: var(--space-md);
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-    }
-    .offer-store {
-        font-size: 0.8rem;
-        color: var(--primary);
-        font-weight: 600;
-        margin-bottom: var(--space-xs);
-    }
-    .offer-name {
-        font-weight: 700;
-        font-size: 1.1rem;
-        margin-bottom: var(--space-xs);
-        color: var(--text-color);
-    }
-    .offer-price {
-        font-size: 1.25rem;
-        font-weight: 800;
-        color: var(--accent);
-        margin-top: auto;
-        padding-top: var(--space-sm);
-    }
-    .offer-original-price {
-        font-size: 0.9rem;
-        color: var(--text-muted);
-        text-decoration: line-through;
-        margin-left: var(--space-xs);
-        font-weight: normal;
-    }
-    .offer-btn {
-        display: block;
-        text-align: center;
-        background: var(--primary);
-        color: white;
-        text-decoration: none;
-        padding: 0.6rem;
-        font-weight: 600;
-        border-radius: var(--radius-sm);
-        margin-top: var(--space-md);
-        transition: background 0.2s;
-    }
-    .offer-btn:hover { background: var(--primary-dark); }
-</style>
+<!-- Home Page Wrapper to fix background colors since app.blade.php sets it on body but we want specific rendering here -->
+<div class="min-h-screen bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 -mt-8 sm:-mt-12 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 pb-12">
 
 <!-- Public Navbar -->
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg); padding: var(--space-sm) var(--space-md); background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border);">
-    <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;">
-        <i class="fas fa-cube"></i> Central3D
+<div class="flex flex-col sm:flex-row items-center justify-between mb-8 pb-6 border-b border-zinc-200 dark:border-zinc-800 gap-4">
+    <div class="flex items-center gap-2 text-2xl font-black text-emerald-600 dark:text-emerald-500">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+            <i class="fas fa-cube"></i>
+        </div>
+        Central3D
     </div>
-    <div style="display: flex; gap: 1rem; align-items: center;">
+    <div class="flex items-center gap-4">
+        <button id="themeToggleHome" class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors shadow-sm" title="Alternar tema">
+            <i class="fas fa-sun" id="themeIconHome"></i>
+        </button>
         @auth
-            <a href="{{ route('dashboard') }}" class="btn btn-primary" style="padding: 0.5rem 1rem;"><i class="fas fa-tachometer-alt"></i> Meu Painel</a>
+            <a href="{{ route('dashboard') }}" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm font-bold rounded-xl hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all shadow-md">
+                <i class="fas fa-tachometer-alt"></i> Meu Painel
+            </a>
         @else
-            <a href="{{ route('login') }}" style="color: var(--text-color); font-weight: 600; text-decoration: none;">Entrar</a>
-            <a href="{{ route('register') }}" class="btn btn-primary" style="padding: 0.5rem 1rem;">Criar Loja Grátis</a>
+            <a href="{{ route('login') }}" class="text-sm font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors">Entrar</a>
+            <a href="{{ route('register') }}" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5">
+                Criar Loja Grátis
+            </a>
         @endauth
     </div>
 </div>
 
-<div class="hero-section">
-    <h1 class="hero-title">O Hub das Melhores Lojas de Impressão 3D</h1>
-    <p class="hero-subtitle">Encontre peças exclusivas, action figures e utilidades impressas pelas melhores lojas selecionadas pela comunidade.</p>
-    <div class="hero-buttons">
-        <a href="#lojas" class="btn-hero">Explorar Lojas</a>
-        <a href="#ofertas" class="btn-hero btn-hero-outline">Ver Ofertas</a>
+<!-- Hero Section -->
+<div class="relative overflow-hidden bg-gradient-to-br from-emerald-600 to-teal-700 rounded-3xl p-8 sm:p-16 mb-16 text-center shadow-xl shadow-emerald-900/10">
+    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4xNSkiLz48L3N2Zz4=')] opacity-50"></div>
+    <div class="relative z-10 max-w-3xl mx-auto">
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-6 leading-tight tracking-tight">
+            O Hub das Melhores Lojas de <span class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-200 to-teal-100">Impressão 3D</span>
+        </h1>
+        <p class="text-emerald-50 text-base sm:text-lg mb-10 max-w-2xl mx-auto leading-relaxed">
+            Encontre peças exclusivas, action figures e utilidades impressas pelas melhores lojas selecionadas pela comunidade.
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a href="#lojas" class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 bg-white text-emerald-700 text-sm font-bold rounded-xl hover:bg-emerald-50 transition-colors shadow-lg shadow-black/10">
+                Explorar Lojas
+            </a>
+            <a href="#ofertas" class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 bg-transparent border-2 border-emerald-400/50 text-white text-sm font-bold rounded-xl hover:bg-emerald-500/20 hover:border-emerald-400 transition-colors">
+                Ver Ofertas Globais
+            </a>
+        </div>
     </div>
 </div>
 
-<div id="lojas">
-    <div class="section-header">
-        <i class="fas fa-fire" style="font-size: 1.5rem; color: #ef4444;"></i>
-        <h2>Top Lojas da Comunidade</h2>
+<!-- Top Stores -->
+<div id="lojas" class="mb-20 scroll-mt-24">
+    <div class="flex items-center gap-3 mb-8">
+        <div class="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-500/10 flex items-center justify-center text-orange-500">
+            <i class="fas fa-fire text-lg"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-zinc-900 dark:text-white">Top Lojas da Comunidade</h2>
     </div>
 
     @if($topStores->count() > 0)
-        <div class="store-grid">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             @foreach($topStores as $store)
-                <a href="{{ route('store.show', $store->slug) }}" class="store-card">
-                    @if($store->store_logo)
-                        <img src="{{ asset('storage/' . $store->store_logo) }}" class="store-logo" alt="{{ $store->store_name }}">
-                    @else
-                        <div class="store-logo" style="display: inline-flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-store" style="font-size: 2rem; color: var(--text-muted);"></i>
-                        </div>
-                    @endif
-                    <div class="store-name">{{ $store->store_name }}</div>
-                    <div class="store-upvotes">
-                        <i class="fas fa-arrow-up"></i> {{ number_format($store->upvotes ?? 0) }} upvotes
+                <a href="{{ route('store.show', $store->slug) }}" class="group flex flex-col items-center p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm hover:border-emerald-500 dark:hover:border-emerald-500/50 hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all">
+                    <div class="w-20 h-20 rounded-full border-4 border-white dark:border-zinc-950 shadow-md mb-4 overflow-hidden flex items-center justify-center bg-zinc-50 dark:bg-zinc-800">
+                        @if($store->store_logo)
+                            <img src="{{ asset('storage/' . $store->store_logo) }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="{{ $store->store_name }}">
+                        @else
+                            <i class="fas fa-store text-2xl text-zinc-400 dark:text-zinc-600 group-hover:scale-110 transition-transform duration-500"></i>
+                        @endif
+                    </div>
+                    <h3 class="font-bold text-zinc-900 dark:text-white text-center text-lg mb-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{{ $store->store_name }}</h3>
+                    <div class="flex items-center gap-1.5 text-sm font-semibold text-orange-500 bg-orange-50 dark:bg-orange-500/10 px-3 py-1 rounded-full">
+                        <i class="fas fa-arrow-up"></i> {{ number_format($store->upvotes ?? 0) }}
                     </div>
                 </a>
             @endforeach
         </div>
     @else
-        <div class="card" style="text-align: center; padding: 3rem;">
-            <i class="fas fa-store-alt-slash" style="font-size: 3rem; color: var(--border); margin-bottom: 1rem;"></i>
-            <h3 style="color: var(--text-muted);">Nenhuma loja em destaque no momento.</h3>
-            <p>Crie sua loja e seja o primeiro do ranking mundial!</p>
+        <div class="flex flex-col items-center justify-center p-12 bg-white dark:bg-zinc-900/50 border border-dashed border-zinc-300 dark:border-zinc-700 rounded-3xl text-center">
+            <div class="w-16 h-16 rounded-full bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 mb-4">
+                <i class="fas fa-store-slash text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-zinc-900 dark:text-white mb-2">Nenhuma loja em destaque no momento</h3>
+            <p class="text-zinc-500 dark:text-zinc-400">Crie sua loja e seja o primeiro do ranking mundial!</p>
         </div>
     @endif
 </div>
 
-<div id="ofertas" style="margin-top: 4rem;">
-    <div class="section-header">
-        <i class="fas fa-tags" style="font-size: 1.5rem; color: var(--accent);"></i>
-        <h2>Ofertas Globais em Destaque</h2>
+<!-- Global Offers -->
+<div id="ofertas" class="mb-10 scroll-mt-24">
+    <div class="flex items-center gap-3 mb-8">
+        <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+            <i class="fas fa-tags text-lg"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-zinc-900 dark:text-white">Ofertas Globais em Destaque</h2>
     </div>
 
     @if($latestOffers->count() > 0)
-        <div class="offer-grid">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             @foreach($latestOffers as $offer)
-                <div class="offer-card">
-                    <div class="offer-img-container">
+                <div class="group flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm hover:shadow-xl hover:shadow-zinc-200/50 dark:hover:shadow-black/50 hover:-translate-y-1 transition-all overflow-hidden">
+                    <div class="relative aspect-video bg-zinc-100 dark:bg-zinc-950 flex items-center justify-center overflow-hidden p-6 z-0">
                         @if($offer->image_path)
-                            <img src="{{ asset('storage/' . $offer->image_path) }}" class="offer-img" alt="{{ $offer->name }}">
+                            <img src="{{ asset('storage/' . $offer->image_path) }}" class="w-full h-full object-contain filter drop-shadow-md group-hover:scale-110 transition-transform duration-500" alt="{{ $offer->name }}">
                         @else
-                            <i class="fas fa-box" style="font-size: 3rem; color: var(--border);"></i>
+                            <i class="fas fa-box text-5xl text-zinc-300 dark:text-zinc-700 group-hover:scale-110 transition-transform duration-500"></i>
                         @endif
                         
                         @if($offer->discount_percent)
-                            <div style="position: absolute; top: 10px; right: 10px; background: #ef4444; color: white; padding: 0.2rem 0.5rem; border-radius: var(--radius-sm); font-weight: 800; font-size: 0.8rem;">
+                            <div class="absolute top-4 right-4 bg-red-500 text-white px-2.5 py-1 rounded-lg font-bold text-xs shadow-md">
                                 -{{ $offer->discount_percent }}%
                             </div>
                         @endif
                     </div>
-                    <div class="offer-content">
+                    
+                    <div class="p-6 flex flex-col flex-1 relative z-10 bg-white dark:bg-zinc-900">
                         @php
                             $owner = \App\Models\User::find($offer->user_id) ?? \App\Models\User::where('is_admin', true)->first();
                         @endphp
                         
                         @if($owner)
-                            <div class="offer-store"><i class="fas fa-store"></i> {{ $owner->store_name ?? 'Central3D' }}</div>
+                            <div class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-2 flex items-center gap-1.5 uppercase tracking-wider">
+                                <i class="fas fa-store"></i> {{ $owner->store_name ?? 'Central3D' }}
+                            </div>
                         @endif
                         
-                        <div class="offer-name">{{ $offer->name }}</div>
+                        <h3 class="text-lg font-bold text-zinc-900 dark:text-white mb-4 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{{ $offer->name }}</h3>
                         
-                        <div class="offer-price">
-                            R$ {{ number_format($offer->price, 2, ',', '.') }}
+                        <div class="mt-auto flex flex-wrap items-baseline gap-2 pt-4 border-t border-zinc-100 dark:border-zinc-800 mb-5">
+                            <span class="text-2xl font-black text-zinc-900 dark:text-white">R$ {{ number_format($offer->price, 2, ',', '.') }}</span>
                             @if($offer->original_price && $offer->original_price > $offer->price)
-                                <span class="offer-original-price">R$ {{ number_format($offer->original_price, 2, ',', '.') }}</span>
+                                <span class="text-sm font-medium text-zinc-400 line-through">R$ {{ number_format($offer->original_price, 2, ',', '.') }}</span>
                             @endif
                         </div>
                         
-                        <a href="{{ $offer->affiliate_url }}" target="_blank" class="offer-btn">
-                            Ver Oferta <i class="fas fa-external-link-alt" style="margin-left: 5px; font-size: 0.8rem;"></i>
+                        <a href="{{ $offer->affiliate_url }}" target="_blank" class="block w-full text-center px-4 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm font-bold rounded-xl hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors shadow-sm">
+                            Pegar Oferta <i class="fas fa-external-link-alt ml-1.5 text-xs opacity-70"></i>
                         </a>
                     </div>
                 </div>
             @endforeach
         </div>
     @else
-        <div class="card" style="text-align: center; padding: 3rem;">
-            <i class="fas fa-tag" style="font-size: 3rem; color: var(--border); margin-bottom: 1rem;"></i>
-            <h3 style="color: var(--text-muted);">Nenhuma oferta disponível no momento.</h3>
-            <p>Volte mais tarde para encontrar descontos incríveis!</p>
+        <div class="flex flex-col items-center justify-center p-12 bg-white dark:bg-zinc-900/50 border border-dashed border-zinc-300 dark:border-zinc-700 rounded-3xl text-center">
+            <div class="w-16 h-16 rounded-full bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 mb-4">
+                <i class="fas fa-tag text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-zinc-900 dark:text-white mb-2">Nenhuma oferta disponível no momento</h3>
+            <p class="text-zinc-500 dark:text-zinc-400">Volte mais tarde para encontrar descontos incríveis!</p>
         </div>
     @endif
 </div>
 
+</div>
+@endsection
+
+@section('scripts')
+<script>
+    // Specific Theme Toggle for Home Page (since main header is hidden)
+    const homeThemeToggle = document.getElementById('themeToggleHome');
+    const homeThemeIcon = document.getElementById('themeIconHome');
+    
+    function updateHomeThemeIcon() {
+        if(!homeThemeIcon) return;
+        const isDark = document.documentElement.classList.contains('dark');
+        homeThemeIcon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
+    }
+    
+    updateHomeThemeIcon();
+
+    if (homeThemeToggle) {
+        homeThemeToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateHomeThemeIcon();
+            
+            // Sync with sidebar toggle if it exists in DOM
+            const globalIcon = document.getElementById('themeIcon');
+            if(globalIcon) {
+                globalIcon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
+            }
+        });
+    }
+</script>
 @endsection

@@ -3,151 +3,217 @@
 @section('page-title', 'Editar Produto')
 
 @section('content')
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); max-width: 1100px;">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl">
     {{-- Edit Form --}}
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-edit" style="margin-right: 8px; color: var(--primary-light);"></i>Editar Produto</h3>
+    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm overflow-hidden h-fit mb-6 lg:mb-0">
+        <div class="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/50">
+            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
+                <i class="fas fa-edit text-indigo-500"></i> Editar Produto
+            </h3>
         </div>
 
-        <form method="POST" action="{{ route('products.update', $product) }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ route('products.update', $product) }}" enctype="multipart/form-data" class="p-6">
             @csrf
             @method('PUT')
 
-            <div class="form-group">
-                <label class="form-label">Nome do Produto *</label>
-                <input type="text" name="name" class="form-control" value="{{ old('name', $product->name) }}" required>
+            <div class="mb-5">
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Nome do Produto <span class="text-red-500">*</span></label>
+                <input type="text" name="name" value="{{ old('name', $product->name) }}" required 
+                       class="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none">
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Categoria</label>
-                    <input type="text" name="category" class="form-control" value="{{ old('category', $product->category) }}" list="categories">
-                    <datalist id="categories">
-                        @foreach($categories as $cat)
-                            <option value="{{ $cat }}">
-                        @endforeach
-                    </datalist>
+            <div class="mb-5">
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Categoria</label>
+                <input type="text" name="category" value="{{ old('category', $product->category) }}" list="categories" 
+                       class="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none">
+                <datalist id="categories">
+                    @foreach($categories as $cat)
+                        <option value="{{ $cat }}">
+                    @endforeach
+                </datalist>
+            </div>
+
+            <div class="mb-5">
+                <x-image-upload :currentImage="$product->image_path" />
+            </div>
+
+            <div class="mb-5">
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Descrição</label>
+                <textarea name="description" rows="3" 
+                          class="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none resize-none">{{ old('description', $product->description) }}</textarea>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                <div>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Preço de Venda <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-zinc-500 dark:text-zinc-400 sm:text-sm">R$</span>
+                        </div>
+                        <input type="number" name="base_price" step="0.01" min="0" value="{{ old('base_price', $product->base_price) }}" required 
+                               class="w-full pl-9 pr-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Custo Base <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-zinc-500 dark:text-zinc-400 sm:text-sm">R$</span>
+                        </div>
+                        <input type="number" name="base_cost" step="0.01" min="0" value="{{ old('base_cost', $product->base_cost) }}" required 
+                               class="w-full pl-9 pr-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none">
+                    </div>
                 </div>
             </div>
 
-            <x-image-upload :currentImage="$product->image_path" />
-
-            <div class="form-group">
-                <label class="form-label">Descrição</label>
-                <textarea name="description" class="form-control">{{ old('description', $product->description) }}</textarea>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Preço de Venda (R$) *</label>
-                    <input type="number" name="base_price" class="form-control" step="0.01" min="0" value="{{ old('base_price', $product->base_price) }}" required>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Tempo de Impressão</label>
+                    <div class="relative">
+                        <input type="number" name="print_time_hours" step="0.01" min="0" value="{{ old('print_time_hours', $product->print_time_hours) }}" 
+                               class="w-full pr-14 pl-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none">
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <span class="text-zinc-500 dark:text-zinc-400 sm:text-sm">horas</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Custo Base (R$) *</label>
-                    <input type="number" name="base_cost" class="form-control" step="0.01" min="0" value="{{ old('base_cost', $product->base_cost) }}" required>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Tempo de Impressão (horas)</label>
-                    <input type="number" name="print_time_hours" class="form-control" step="0.01" min="0" value="{{ old('print_time_hours', $product->print_time_hours) }}">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Peso do Filamento (g)</label>
-                    <input type="number" name="weight_grams" class="form-control" step="0.01" min="0" value="{{ old('weight_grams', $product->weight_grams) }}">
+                <div>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Peso do Filamento</label>
+                    <div class="relative">
+                        <input type="number" name="weight_grams" step="0.01" min="0" value="{{ old('weight_grams', $product->weight_grams) }}" 
+                               class="w-full pr-8 pl-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none">
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <span class="text-zinc-500 dark:text-zinc-400 sm:text-sm">g</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-check" style="margin-bottom: var(--space-lg);">
-                <input type="checkbox" name="active" id="active" {{ old('active', $product->active) ? 'checked' : '' }}>
-                <label for="active" class="form-label" style="margin: 0;">Produto ativo</label>
+            <div class="mb-8">
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="active" id="active" class="sr-only peer" {{ old('active', $product->active) ? 'checked' : '' }}>
+                    <div class="relative w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-zinc-600 peer-checked:bg-emerald-600"></div>
+                    <span class="ms-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">Produto ativo na loja web</span>
+                </label>
             </div>
 
-            <div style="display: flex; gap: var(--space-sm);">
-                <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Salvar</button>
-                <a href="{{ route('products.index') }}" class="btn btn-outline">Cancelar</a>
+            <div class="flex items-center gap-3 pt-6 border-t border-zinc-200 dark:border-zinc-800">
+                <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 dark:focus:ring-offset-zinc-900">
+                    <i class="fas fa-check"></i> Salvar Alterações
+                </button>
+                <a href="{{ route('products.index') }}" class="inline-flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-sm font-medium rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors shadow-sm">
+                    Cancelar
+                </a>
             </div>
         </form>
     </div>
 
     {{-- Variations --}}
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-layer-group" style="margin-right: 8px; color: var(--accent);"></i>Variações</h3>
+    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm overflow-hidden h-fit">
+        <div class="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/50">
+            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
+                <i class="fas fa-layer-group text-emerald-500"></i> Variações
+            </h3>
         </div>
 
-        @if($product->variations->count() > 0)
-            <div class="table-container" style="margin-bottom: var(--space-lg);">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>Tipo</th>
-                            <th>Mod. Preço</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($product->variations as $variation)
+        <div class="p-6">
+            @if($product->variations->count() > 0)
+                <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-800 rounded-lg mb-8">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-zinc-50 dark:bg-zinc-900/50 text-zinc-500 dark:text-zinc-400 uppercase tracking-wider text-xs border-b border-zinc-200 dark:border-zinc-800">
                             <tr>
-                                <td>{{ $variation->name }}</td>
-                                <td>
-                                    <span class="badge badge-primary">
-                                        {{ $variation->type === 'color' ? 'Cor' : ($variation->type === 'size' ? 'Tamanho' : 'Material') }}
-                                    </span>
-                                </td>
-                                <td>{{ $variation->price_modifier >= 0 ? '+' : '' }}R$ {{ number_format($variation->price_modifier, 2, ',', '.') }}</td>
-                                <td>
-                                    <form method="POST" action="{{ route('products.variations.destroy', [$product, $variation]) }}"
-                                          onsubmit="return confirm('Remover esta variação?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-danger btn-sm btn-icon"><i class="fas fa-trash"></i></button>
-                                    </form>
-                                </td>
+                                <th class="px-4 py-3 font-medium">Nome</th>
+                                <th class="px-4 py-3 font-medium">Tipo</th>
+                                <th class="px-4 py-3 font-medium">Mod. Preço</th>
+                                <th class="px-4 py-3 font-medium text-right">Ações</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @else
-            <p class="text-muted" style="font-size: 0.85rem; margin-bottom: var(--space-lg);">Nenhuma variação cadastrada</p>
-        @endif
+                        </thead>
+                        <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800 text-zinc-700 dark:text-zinc-300">
+                            @foreach($product->variations as $variation)
+                                <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                                    <td class="px-4 py-3 font-medium text-zinc-900 dark:text-white">{{ $variation->name }}</td>
+                                    <td class="px-4 py-3">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-400">
+                                            {{ $variation->type === 'color' ? 'Cor' : ($variation->type === 'size' ? 'Tamanho' : 'Material') }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-emerald-600 dark:text-emerald-400 font-medium">
+                                        {{ $variation->price_modifier >= 0 ? '+' : '' }}R$ {{ number_format($variation->price_modifier, 2, ',', '.') }}
+                                    </td>
+                                    <td class="px-4 py-3 text-right">
+                                        <form method="POST" action="{{ route('products.variations.destroy', [$product, $variation]) }}"
+                                              onsubmit="return confirm('Tem certeza que deseja remover esta variação?');" class="inline-block">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-500/10 transition-colors" title="Excluir">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="text-center py-6 mb-8 border border-dashed border-zinc-300 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-900/50">
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Nenhuma variação cadastrada</p>
+                </div>
+            @endif
 
-        <form method="POST" action="{{ route('products.variations.store', $product) }}">
-            @csrf
-            <div class="form-group">
-                <label class="form-label">Nome da Variação</label>
-                <input type="text" name="name" class="form-control" required placeholder="Ex: Azul, Grande, PLA+">
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Tipo</label>
-                    <select name="type" class="form-control">
-                        <option value="color">Cor</option>
-                        <option value="size">Tamanho</option>
-                        <option value="material">Material</option>
-                    </select>
+            <form method="POST" action="{{ route('products.variations.store', $product) }}" class="bg-zinc-50 dark:bg-zinc-900/50 p-5 rounded-lg border border-zinc-200 dark:border-zinc-800">
+                @csrf
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Nome da Variação</label>
+                    <input type="text" name="name" required placeholder="Ex: Azul, Grande, PLA+" 
+                           class="w-full px-3 py-2 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none">
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Mod. Preço (R$)</label>
-                    <input type="number" name="price_modifier" class="form-control" step="0.01" value="0.00">
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Tipo</label>
+                        <select name="type" 
+                                class="w-full px-3 py-2 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none appearance-none pr-8 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239ca3af%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px_12px] bg-[right_12px_center] bg-no-repeat">
+                            <option value="color">Cor</option>
+                            <option value="size">Tamanho</option>
+                            <option value="material">Material</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Mod. Preço (+/-)</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-zinc-500 dark:text-zinc-400 sm:text-xs text-xs mt-0.5">R$</span>
+                            </div>
+                            <input type="number" name="price_modifier" step="0.01" value="0.00" 
+                                   class="w-full pl-8 pr-3 py-2 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none">
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Mod. Custo (R$)</label>
-                    <input type="number" name="cost_modifier" class="form-control" step="0.01" value="0.00">
+                
+                <div class="grid grid-cols-2 gap-4 mb-5">
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Mod. Custo (+/-)</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-zinc-500 dark:text-zinc-400 sm:text-xs text-xs mt-0.5">R$</span>
+                            </div>
+                            <input type="number" name="cost_modifier" step="0.01" value="0.00" 
+                                   class="w-full pl-8 pr-3 py-2 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">SKU</label>
+                        <input type="text" name="sku" placeholder="Opcional" 
+                               class="w-full px-3 py-2 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none placeholder-zinc-400 dark:placeholder-zinc-600">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">SKU</label>
-                    <input type="text" name="sku" class="form-control" placeholder="Opcional">
-                </div>
-            </div>
-            <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Adicionar Variação</button>
-        </form>
+                
+                <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 text-sm font-medium rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors shadow-sm">
+                    <i class="fas fa-plus"></i> Adicionar Variação
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 @endsection
