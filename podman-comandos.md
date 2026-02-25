@@ -15,7 +15,9 @@ Nessa abordagem **não usamos** o `compose`. Criamos os containers conectando-os
 Primeiro, criamos a "caixa principal" que vai abrigar as peças e expor as portas para a sua máquina.
 
 ```bash
-podman pod create --name erp-pod -p 8123:80
+podman pod create --name erp-pod -p 8123:80 -p 3308:3306 #Debug local
+podman pod create --name erp-pod -p 8123:80 #Produção
+
 ```
 
 ### Passo B: Subir o Redis (Cache/Sessão/Filas)
