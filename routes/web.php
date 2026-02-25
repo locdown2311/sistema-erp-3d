@@ -13,6 +13,10 @@ use App\Http\Controllers\SettingController;
 use App\Http\Controllers\FilamentController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\OfferController;
+use App\Http\Controllers\HomeController;
+
+// Public Landing Page (Marketplace Hub)
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Auth routes (guests only)
 Route::middleware('guest')->group(function () {
@@ -32,7 +36,7 @@ Route::get('loja/{slug}/latest-offer', [StoreController::class, 'latestOffer'])-
 
 // Authenticated ERP routes
 Route::middleware('auth')->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('products', ProductController::class);
     Route::post('products/{product}/variations', [ProductController::class, 'addVariation'])->name('products.variations.store');
