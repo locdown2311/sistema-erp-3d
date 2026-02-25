@@ -17,8 +17,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     @php
-        $cp = auth()->user()->store_color_primary ?? '#16a34a';
-        $ca = auth()->user()->store_color_accent ?? '#86efac';
+        $cp = auth()->check() ? (auth()->user()->store_color_primary ?? '#16a34a') : '#16a34a';
+        $ca = auth()->check() ? (auth()->user()->store_color_accent ?? '#86efac') : '#16a34a';
     @endphp
     <style>
         :root {
@@ -35,15 +35,16 @@
 <body>
     <div class="app-container">
         {{-- Sidebar --}}
+        @auth
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
-                    @if(auth()->user()->store_logo)
+                    @if(auth()->check() && auth()->user()->store_logo)
                         <img src="{{ asset('storage/' . auth()->user()->store_logo) }}" alt="" style="width:28px; height:28px; border-radius:6px; object-fit:cover;">
                     @else
                         <i class="fas fa-cube logo-icon"></i>
                     @endif
-                    <span class="logo-text">{{ auth()->user()->store_name ?? 'ERP 3D' }}</span>
+                    <span class="logo-text">{{ auth()->check() ? (auth()->user()->store_name ?? 'ERP 3D') : 'Central 3D' }}</span>
                 </div>
                 <button class="sidebar-toggle" id="sidebarToggle">
                     <i class="fas fa-bars"></i>
@@ -114,13 +115,16 @@
                 </form>
             </div>
         </aside>
+        @endauth
 
         {{-- Main Content --}}
         <main class="main-content">
             <header class="top-bar">
+                @auth
                 <button class="mobile-toggle" id="mobileToggle">
                     <i class="fas fa-bars"></i>
                 </button>
+                @endauth
                 <h1 class="page-title">@yield('page-title', 'Dashboard')</h1>
                 <div class="top-bar-actions">
                     <button class="theme-toggle" id="themeToggle" title="Alternar tema">
@@ -158,7 +162,9 @@
     </div>
 
     {{-- Overlay for mobile sidebar --}}
+    @auth
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    @endauth
 
     <script>
         // Sidebar toggle
