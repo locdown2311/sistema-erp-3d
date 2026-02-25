@@ -59,6 +59,9 @@
                 </div>
 
                 <div class="flex items-center gap-3">
+                    <button id="themeToggleStore" class="w-10 h-10 rounded-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border border-zinc-200/50 dark:border-zinc-700/50 text-zinc-700 dark:text-zinc-300 flex items-center justify-center hover:bg-white dark:hover:bg-zinc-800 transition-all shadow-sm" title="Alternar tema">
+                        <i class="fas fa-sun" id="themeIconStore"></i>
+                    </button>
                     @auth
                         @if(auth()->id() === $store->id)
                             <a href="{{ route('dashboard') }}" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm font-semibold rounded-xl hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all shadow-md">
@@ -156,5 +159,34 @@
     </main>
 
     @include('store.partials.offer-alert')
+
+    <script>
+        // Init theme if needed
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
+        const storeThemeToggle = document.getElementById('themeToggleStore');
+        const storeThemeIcon = document.getElementById('themeIconStore');
+        
+        function updateStoreThemeIcon() {
+            if(!storeThemeIcon) return;
+            const isDark = document.documentElement.classList.contains('dark');
+            storeThemeIcon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
+        }
+        
+        updateStoreThemeIcon();
+
+        if (storeThemeToggle) {
+            storeThemeToggle.addEventListener('click', () => {
+                document.documentElement.classList.toggle('dark');
+                const isDark = document.documentElement.classList.contains('dark');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                updateStoreThemeIcon();
+            });
+        }
+    </script>
 </body>
 </html>
