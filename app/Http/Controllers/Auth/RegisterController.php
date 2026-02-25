@@ -26,10 +26,6 @@ class RegisterController extends Controller
             'slug' => 'required|string|max:100|unique:users,slug|regex:/^[a-z0-9\-]+$/',
             'whatsapp' => 'nullable|string|max:20',
             'store_description' => 'nullable|string|max:1000',
-            'captcha' => 'required|captcha',
-        ], [
-            'captcha.required' => 'Por favor, informe o código da imagem.',
-            'captcha.captcha' => 'O código de verificação está incorreto.',
         ]);
 
         // Handle store logo (base64 from crop or file upload)
