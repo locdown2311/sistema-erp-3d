@@ -13,6 +13,7 @@ class StoreController extends Controller
         $store = User::where('slug', $slug)->firstOrFail();
         $products = Product::where('user_id', $store->id)
             ->where('active', true)
+            ->with('variations')
             ->orderBy('name')
             ->get();
 

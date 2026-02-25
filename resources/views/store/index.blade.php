@@ -162,7 +162,7 @@
         @if($products->count() > 0)
             <div class="store-products-grid">
                 @foreach($products as $product)
-                    <div class="store-product-card">
+                    <div class="store-product-card" id="product-card-{{ $product->id }}">
                         <div class="store-product-img">
                             @if($product->image_path)
                                 <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}">
@@ -177,19 +177,62 @@
                             @endif
                         </div>
                         <div class="store-product-bot">
-                            <span class="store-product-price">R$ {{ number_format($product->base_price, 2, ',', '.') }}</span>
+                            <span class="store-product-price" id="price-{{ $product->id }}" data-base-price="{{ $product->base_price }}">
+                                R$ {{ number_format($product->base_price, 2, ',', '.') }}
+                            </span>
+
+                            @if($product->variations->count() > 0)
+                                <div style="margin-top: var(--space-sm); margin-bottom: var(--space-sm); width: 100%;">
+                                    <select class="form-control" style="font-size: 0.85rem; padding: 0.4rem; height: auto;" 
+                                            id="var-{{ $product->id }}" 
+                                            onchange="updateProduct({{ $product->id }}, '{{ addslashes($product->name) }}', '{{ $store->whatsapp ? preg_replace('/\D/', '', $store->whatsapp) : '' }}')">
+                                        <option value="" data-modifier="0">Sem variação</option>
+                                        @foreach($product->variations as $var)
+                                            <option value="{{ $var->name }}" data-modifier="{{ $var->price_modifier }}">
+                                                {{ $var->name }} (+R$ {{ number_format($var->price_modifier, 2, ',', '.') }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
+
                             @if(!$isOwner && $store->whatsapp)
                                 <a href="https://wa.me/{{ preg_replace('/\D/', '', $store->whatsapp) }}?text={{ urlencode('Olá! Tenho interesse no produto: ' . $product->name . ' (R$ ' . number_format($product->base_price, 2, ',', '.') . '). Está disponível?') }}"
-                                   target="_blank" class="btn-whatsapp">
+                                   target="_blank" class="btn-whatsapp" id="btn-wa-{{ $product->id }}" style="margin-top: {{ $product->variations->count() > 0 ? 'var(--space-sm)' : '0' }}">
                                     <i class="fab fa-whatsapp"></i> Comprar
                                 </a>
                             @elseif($isOwner)
-                                <a href="{{ route('products.edit', $product) }}" class="btn btn-outline btn-sm"><i class="fas fa-edit"></i> Editar</a>
+                                <a href="{{ route('products.edit', $product) }}" class="btn btn-outline btn-sm" style="margin-top: {{ $product->variations->count() > 0 ? 'var(--space-sm)' : '0' }}">
+                                    <i class="fas fa-edit"></i> Editar
+                                </a>
                             @endif
                         </div>
                     </div>
                 @endforeach
             </div>
+
+            <script>
+                function updateProduct(productId, productName, phone) {
+                    const select = document.getElementById('var-' + productId);
+                    const option = select.options[select.selectedIndex];
+                    const modifier = parseFloat(option.getAttribute('data-modifier') || 0);
+                    
+                    const priceEl = document.getElementById('price-' + productId);
+                    const basePrice = parseFloat(priceEl.getAttribute('data-base-price'));
+                    const finalPrice = basePrice + modifier;
+                    
+                    // Update visual price (BR format)
+                    priceEl.innerText = 'R$ ' + finalPrice.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    
+                    // Update WhatsApp link if exists
+                    const btnWa = document.getElementById('btn-wa-' + productId);
+                    if (btnWa && phone) {
+                        let variationText = option.value ? ` - Variação: ${option.value}` : '';
+                        let text = `Olá! Tenho interesse no produto: ${productName}${variationText} (R$ ${finalPrice.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}). Está disponível?`;
+                        btnWa.href = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+                    }
+                }
+            </script>
         @else
             <div class="empty-store">
                 <i class="fas fa-box-open"></i>
