@@ -25,7 +25,7 @@ class ModelerRequestController extends Controller
             'email' => 'required|email|max:255',
             'whatsapp' => 'nullable|string|max:20',
             'description' => 'required|string',
-            'image' => 'nullable|image|max:5120', // 5MB max
+            'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp,bmp,tiff,heic,heif,pdf|max:20480', // 20MB max
             'budget_range' => 'required|string|max:50',
         ]);
 

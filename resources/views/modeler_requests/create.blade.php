@@ -77,9 +77,9 @@
                             </div>
 
                             <div>
-                                <label for="image" class="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Imagem de Referência <span class="text-zinc-400 text-xs font-normal">(opcional, max 5MB)</span></label>
+                                <label for="image" class="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Arquivo de Referência <span class="text-zinc-400 text-xs font-normal">(opcional, max 20MB)</span></label>
                                 <div class="relative w-full">
-                                    <input type="file" name="image" id="image" accept="image/*" class="w-full text-sm text-zinc-500 dark:text-zinc-400
+                                    <input type="file" name="image" id="image" accept="image/*,.pdf,.heic,.heif,.tiff" class="w-full text-sm text-zinc-500 dark:text-zinc-400
                                     file:mr-4 file:py-2.5 file:px-4
                                     file:rounded-l-xl file:border-0
                                     file:text-sm file:font-bold
