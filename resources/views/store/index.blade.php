@@ -240,5 +240,6 @@
             </div>
         @endif
     </div>
+    @include('store.partials.offer-alert')
 </body>
 </html>

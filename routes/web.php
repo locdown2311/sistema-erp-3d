@@ -28,6 +28,7 @@ Route::post('logout', [LoginController::class, 'logout'])->name('logout')->middl
 Route::get('loja/{slug}', [StoreController::class, 'show'])->name('store.show');
 Route::get('loja/{slug}/ofertas', [StoreController::class, 'offers'])->name('store.offers');
 Route::get('loja/{slug}/produto/{product}', [StoreController::class, 'product'])->name('store.product');
+Route::get('loja/{slug}/latest-offer', [StoreController::class, 'latestOffer'])->name('store.latest-offer');
 
 // Authenticated ERP routes
 Route::middleware('auth')->group(function () {

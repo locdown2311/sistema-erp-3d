@@ -42,4 +42,34 @@ class StoreController extends Controller
 
         return view('store.product', compact('store', 'product', 'isOwner'));
     }
+
+    public function latestOffer(string $slug)
+    {
+        $store = User::where('slug', $slug)->firstOrFail();
+        $since = request('since');
+
+        if (!$since) {
+            return response()->json(['has_new' => false]);
+        }
+
+        // Find the newest offer active, created strictly after the ISO 8601 $since date
+        $offer = Offer::where('user_id', $store->id)
+            ->where('active', true)
+            ->where('created_at', '>', date('Y-m-d H:i:s', strtotime($since)))
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if ($offer) {
+            return response()->json([
+                'has_new' => true,
+                'offer' => [
+                    'name' => $offer->name,
+                    'created_at' => $offer->created_at->toISOString(),
+                    'image_url' => $offer->image_path ? asset('storage/' . $offer->image_path) : null,
+                ]
+            ]);
+        }
+
+        return response()->json(['has_new' => false]);
+    }
 }
