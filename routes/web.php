@@ -14,9 +14,14 @@ use App\Http\Controllers\FilamentController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\OfferController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ModelerRequestController;
 
 // Public Landing Page (Marketplace Hub)
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+// Modeler Request routes
+Route::get('procurar-modelador', [ModelerRequestController::class, 'create'])->name('modeler-requests.create');
+Route::post('procurar-modelador', [ModelerRequestController::class, 'store'])->name('modeler-requests.store');
 
 // Auth routes (guests only)
 Route::middleware('guest')->group(function () {
@@ -58,6 +63,8 @@ Route::middleware('auth')->group(function () {
     Route::post('costs', [CostController::class, 'store'])->name('costs.store');
     Route::delete('costs/{cost}', [CostController::class, 'destroy'])->name('costs.destroy');
 
+    Route::get('pedidos-modelagem', [ModelerRequestController::class, 'index'])->name('modeler-requests.index');
+
     Route::get('calendar', [CalendarController::class, 'index'])->name('calendar.index');
     Route::get('calendar/tasks', [CalendarController::class, 'tasks'])->name('calendar.tasks');
     Route::post('calendar/tasks', [CalendarController::class, 'storeTask'])->name('calendar.tasks.store');
@@ -70,4 +77,7 @@ Route::middleware('auth')->group(function () {
     // Admin: Offers management
     Route::resource('offers', OfferController::class);
     Route::post('offers/fetch-meta', [OfferController::class, 'fetchMeta'])->name('offers.fetch-meta');
+
+    // Admin: Modeler Requests
+    Route::delete('modeler-requests/{modelerRequest}', [ModelerRequestController::class, 'destroy'])->name('modeler-requests.destroy');
 });

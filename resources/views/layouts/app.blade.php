@@ -89,6 +89,13 @@
             @endif
 
             <div class="my-4 border-t border-zinc-200 dark:border-zinc-800/50"></div>
+            
+            <a href="{{ route('modeler-requests.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white border-l-2 {{ request()->routeIs('modeler-requests.index') ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold' : 'border-transparent' }}">
+                <i class="fas fa-magic w-5 text-center text-emerald-500"></i>
+                <span>Pedidos de Modelagem</span>
+            </a>
+
+            <div class="my-4 border-t border-zinc-200 dark:border-zinc-800/50"></div>
 
             <a href="{{ route('store.show', auth()->user()->slug) }}" target="_blank" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white">
                 <i class="fas fa-store w-5 text-center"></i>

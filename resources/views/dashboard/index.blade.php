@@ -163,6 +163,88 @@
         </div>
     @endif
 </div>
+
+{{-- Modeler Requests --}}
+<div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm overflow-hidden mb-6">
+    <div class="p-5 sm:p-6 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+            <h3 class="font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
+                <i class="fas fa-pencil-ruler text-emerald-500"></i> Solicitações de Modelagem da Comunidade
+            </h3>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Últimos pedidos abertos por clientes buscando modeladores.</p>
+        </div>
+    </div>
+    
+    @if(isset($modelerRequests) && $modelerRequests->count() > 0)
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+                <thead class="bg-zinc-50 dark:bg-zinc-900/50 text-zinc-500 dark:text-zinc-400 uppercase tracking-wider text-xs border-b border-zinc-200 dark:border-zinc-800">
+                    <tr>
+                        <th class="px-6 py-4 font-medium">Cliente</th>
+                        <th class="px-6 py-4 font-medium">Contato</th>
+                        <th class="px-6 py-4 font-medium">Descrição</th>
+                        <th class="px-6 py-4 font-medium text-right">Orçamento</th>
+                        <th class="px-6 py-4 font-medium text-right">Anexo</th>
+                        @if(auth()->user()->is_admin)
+                        <th class="px-6 py-4 font-medium text-right">Ação</th>
+                        @endif
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800 text-zinc-700 dark:text-zinc-300">
+                    @foreach($modelerRequests as $request)
+                        <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                            <td class="px-6 py-4 font-medium">{{ $request->name }}</td>
+                            <td class="px-6 py-4 text-zinc-500">
+                                @if($request->whatsapp)
+                                    <div class="flex flex-col">
+                                        <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $request->whatsapp) }}" target="_blank" class="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5"><i class="fab fa-whatsapp"></i> {{ $request->whatsapp }}</a>
+                                        <span class="text-xs">{{ $request->email }}</span>
+                                    </div>
+                                @else
+                                    <a href="mailto:{{ $request->email }}" class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"><i class="fas fa-envelope"></i> {{ $request->email }}</a>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 text-zinc-500 truncate max-w-[250px]" title="{{ $request->description }}">
+                                {{ $request->description }}
+                            </td>
+                            <td class="px-6 py-4 font-medium text-right">
+                                <span class="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-full text-xs border border-zinc-200 dark:border-zinc-700">{{ $request->budget_range }}</span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                @if($request->image_path)
+                                    <a href="{{ asset('storage/' . $request->image_path) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 rounded-lg text-xs font-semibold border border-emerald-200 dark:border-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors">
+                                        <i class="fas fa-image"></i> Ver Imagem
+                                    </a>
+                                @else
+                                    <span class="text-zinc-400 text-xs">—</span>
+                                @endif
+                            </td>
+                            @if(auth()->user()->is_admin)
+                            <td class="px-6 py-4 text-right">
+                                <form action="{{ route('modeler-requests.destroy', $request) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja apagar essa solicitação?')" class="inline-block">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 flex items-center justify-center transition-colors shadow-sm" title="Excluir">
+                                        <i class="fas fa-trash-alt text-sm"></i>
+                                    </button>
+                                </form>
+                            </td>
+                            @endif
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @else
+        <div class="px-6 py-12 text-center">
+            <div class="w-16 h-16 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mx-auto mb-4 text-zinc-400 text-2xl">
+                <i class="fas fa-inbox"></i>
+            </div>
+            <h3 class="text-sm font-medium text-zinc-900 dark:text-white mb-1">Nenhuma solicitação no momento</h3>
+            <p class="text-sm text-zinc-500 mb-4">Os clientes ainda não fizeram novos pedidos de modelagem hoje.</p>
+        </div>
+    @endif
+</div>
 @endsection
 
 @section('scripts')

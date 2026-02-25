@@ -47,9 +47,12 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        // Modeler Requests for admins and users
+        $modelerRequests = \App\Models\ModelerRequest::latest()->take(10)->get();
+
         return view('dashboard.index', compact(
             'totalProducts', 'totalSales', 'totalRevenue', 'pendingTasks',
-            'salesChart', 'recentSales', 'lowStock', 'upcomingTasks'
+            'salesChart', 'recentSales', 'lowStock', 'upcomingTasks', 'modelerRequests'
         ));
     }
 }
