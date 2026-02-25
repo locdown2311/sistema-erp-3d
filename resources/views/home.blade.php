@@ -7,7 +7,7 @@
     /* Public Home Layout Fixes to align with app.blade.php structure */
     body { padding-top: 20px; }
     .sidebar { display: none !important; }
-    .main-content { margin: 0 auto !important; max-width: 1200px; width: 100%; }
+    .main-content { margin: 0 auto !important; max-width: 100% !important; width: 100%; padding: 0 2rem !important; }
     
     .hero-section {
         background: linear-gradient(135deg, var(--primary), var(--accent));
