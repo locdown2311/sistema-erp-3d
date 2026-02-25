@@ -53,8 +53,7 @@ class StoreController extends Controller
         }
 
         // Find the newest offer active, created strictly after the ISO 8601 $since date
-        $offer = Offer::where('user_id', $store->id)
-            ->where('active', true)
+        $offer = Offer::where('active', true)
             ->where('created_at', '>', date('Y-m-d H:i:s', strtotime($since)))
             ->orderBy('created_at', 'desc')
             ->first();

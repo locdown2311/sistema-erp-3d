@@ -47,7 +47,7 @@ Agora damos o "build" da imagem local baseada no nosso `Dockerfile` (que tem as 
 podman build -t localhost/erp-3d-app .
 
 # Sobe o container da App
-podman run -d --pod erp-pod --name erp-app -v uploads:/var/www/html/storage/app/public:Z localhost/erp-3d-app
+podman run -d --pod erp-pod --name erp-app -v ./uploads:/var/www/html/storage/app/public:Z localhost/erp-3d-app
 podman exec -it erp-app php artisan storage:link  
 ```
 
