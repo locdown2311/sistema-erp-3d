@@ -175,18 +175,13 @@
                             @if($product->category)
                                 <div class="store-product-cat">{{ $product->category }}</div>
                             @endif
-                        </div>
-                        <div class="store-product-bot">
-                            <span class="store-product-price" id="price-{{ $product->id }}" data-base-price="{{ $product->base_price }}">
-                                R$ {{ number_format($product->base_price, 2, ',', '.') }}
-                            </span>
 
                             @if($product->variations->count() > 0)
-                                <div style="margin-top: var(--space-sm); margin-bottom: var(--space-sm); width: 100%;">
-                                    <select class="form-control" style="font-size: 0.85rem; padding: 0.4rem; height: auto;" 
+                                <div style="margin-top: var(--space-md); width: 100%;">
+                                    <select class="form-control" style="font-size: 0.85rem; padding: 0.4rem; height: auto; background-color: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border);" 
                                             id="var-{{ $product->id }}" 
                                             onchange="updateProduct({{ $product->id }}, '{{ addslashes($product->name) }}', '{{ $store->whatsapp ? preg_replace('/\D/', '', $store->whatsapp) : '' }}')">
-                                        <option value="" data-modifier="0">Sem variação</option>
+                                        <option value="" data-modifier="0">Selecione uma opção...</option>
                                         @foreach($product->variations as $var)
                                             <option value="{{ $var->name }}" data-modifier="{{ $var->price_modifier }}">
                                                 {{ $var->name }} (+R$ {{ number_format($var->price_modifier, 2, ',', '.') }})
@@ -195,14 +190,19 @@
                                     </select>
                                 </div>
                             @endif
+                        </div>
+                        <div class="store-product-bot" style="margin-top: auto; padding-top: var(--space-md);">
+                            <span class="store-product-price" id="price-{{ $product->id }}" data-base-price="{{ $product->base_price }}">
+                                R$ {{ number_format($product->base_price, 2, ',', '.') }}
+                            </span>
 
                             @if(!$isOwner && $store->whatsapp)
                                 <a href="https://wa.me/{{ preg_replace('/\D/', '', $store->whatsapp) }}?text={{ urlencode('Olá! Tenho interesse no produto: ' . $product->name . ' (R$ ' . number_format($product->base_price, 2, ',', '.') . '). Está disponível?') }}"
-                                   target="_blank" class="btn-whatsapp" id="btn-wa-{{ $product->id }}" style="margin-top: {{ $product->variations->count() > 0 ? 'var(--space-sm)' : '0' }}">
+                                   target="_blank" class="btn-whatsapp" id="btn-wa-{{ $product->id }}">
                                     <i class="fab fa-whatsapp"></i> Comprar
                                 </a>
                             @elseif($isOwner)
-                                <a href="{{ route('products.edit', $product) }}" class="btn btn-outline btn-sm" style="margin-top: {{ $product->variations->count() > 0 ? 'var(--space-sm)' : '0' }}">
+                                <a href="{{ route('products.edit', $product) }}" class="btn btn-outline btn-sm">
                                     <i class="fas fa-edit"></i> Editar
                                 </a>
                             @endif
