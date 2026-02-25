@@ -61,9 +61,10 @@ Route::middleware('auth')->group(function () {
     Route::get('costs', [CostController::class, 'index'])->name('costs.index');
     Route::post('costs/calculate', [CostController::class, 'calculate'])->name('costs.calculate');
     Route::post('costs', [CostController::class, 'store'])->name('costs.store');
-    Route::delete('costs/{cost}', [CostController::class, 'destroy'])->name('costs.destroy');
-
     Route::get('pedidos-modelagem', [ModelerRequestController::class, 'index'])->name('modeler-requests.index');
+
+    // Tracking SeuRastreio API interno da view
+    Route::get('api/tracking/{code}', [\App\Http\Controllers\TrackingController::class, 'track'])->name('api.tracking');
 
     Route::get('calendar', [CalendarController::class, 'index'])->name('calendar.index');
     Route::get('calendar/tasks', [CalendarController::class, 'tasks'])->name('calendar.tasks');

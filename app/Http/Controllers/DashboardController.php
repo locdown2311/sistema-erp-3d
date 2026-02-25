@@ -50,9 +50,17 @@ class DashboardController extends Controller
         // Modeler Requests for admins and users
         $modelerRequests = \App\Models\ModelerRequest::latest()->take(10)->get();
 
+        // Active Shippings
+        $activeShippings = \App\Models\Sale::where('user_id', $userId)
+            ->whereNotNull('tracking_code')
+            ->where('shipping_status', '!=', 'Entregue')
+            ->orderBy('created_at', 'desc')
+            ->take(8)
+            ->get();
+
         return view('dashboard.index', compact(
             'totalProducts', 'totalSales', 'totalRevenue', 'pendingTasks',
-            'salesChart', 'recentSales', 'lowStock', 'upcomingTasks', 'modelerRequests'
+            'salesChart', 'recentSales', 'lowStock', 'upcomingTasks', 'modelerRequests', 'activeShippings'
         ));
     }
 }

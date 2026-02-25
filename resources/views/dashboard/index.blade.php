@@ -164,6 +164,53 @@
     @endif
 </div>
 
+{{-- Active Shippings --}}
+<div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm overflow-hidden mb-6">
+    <div class="p-5 sm:p-6 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+            <h3 class="font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
+                <i class="fas fa-truck-fast text-sky-500"></i> Fretes em Andamento
+            </h3>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Acompanhe pelo Correio pacotes que foram registrados com rastreamento.</p>
+        </div>
+    </div>
+    
+    @if(isset($activeShippings) && $activeShippings->count() > 0)
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+                <thead class="bg-zinc-50 dark:bg-zinc-900/50 text-zinc-500 dark:text-zinc-400 uppercase tracking-wider text-xs border-b border-zinc-200 dark:border-zinc-800">
+                    <tr>
+                        <th class="px-6 py-4 font-medium">Cliente</th>
+                        <th class="px-6 py-4 font-medium">Código</th>
+                        <th class="px-6 py-4 font-medium text-right">Ação</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800 text-zinc-700 dark:text-zinc-300">
+                    @foreach($activeShippings as $shipping)
+                        <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                            <td class="px-6 py-4 font-medium">{{ $shipping->customer_name ?: 'Venda #'.$shipping->id }}</td>
+                            <td class="px-6 py-4 font-mono text-zinc-600 dark:text-zinc-400 font-semibold">{{ $shipping->tracking_code }}</td>
+                            <td class="px-6 py-4 text-right cursor-pointer">
+                                <button type="button" onclick="trackCode('{{ $shipping->tracking_code }}')" class="inline-flex items-center gap-2 px-3 py-1.5 bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-400 rounded-lg text-xs font-semibold border border-sky-200 dark:border-sky-500/20 hover:bg-sky-100 dark:hover:bg-sky-500/20 transition-colors">
+                                    <i class="fas fa-search-location"></i> Rastrear
+                                </button>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @else
+        <div class="px-6 py-12 text-center">
+            <div class="w-16 h-16 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mx-auto mb-4 text-zinc-400 text-2xl">
+                <i class="fas fa-box-open"></i>
+            </div>
+            <h3 class="text-sm font-medium text-zinc-900 dark:text-white mb-1">Nenhum frete com rastreio</h3>
+            <p class="text-sm text-zinc-500 mb-4">Adicione o Código de Rastreio nas suas vendas e ele aparecerá aqui.</p>
+        </div>
+    @endif
+</div>
+
 {{-- Modeler Requests --}}
 <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm overflow-hidden mb-6">
     <div class="p-5 sm:p-6 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -244,6 +291,40 @@
             <p class="text-sm text-zinc-500 mb-4">Os clientes ainda não fizeram novos pedidos de modelagem hoje.</p>
         </div>
     @endif
+</div>
+
+{{-- Modal Rastreio --}}
+<div id="trackingModal" class="fixed inset-0 z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <!-- Fundo escuro -->
+    <div class="fixed inset-0 bg-zinc-900/80 backdrop-blur-sm transition-opacity" onclick="closeTrackingModal()"></div>
+    
+    <!-- Container do modal -->
+    <div class="relative bg-white dark:bg-zinc-900 rounded-2xl shadow-xl w-full max-w-lg mx-4 overflow-hidden border border-zinc-200 dark:border-zinc-800 transform scale-95 transition-transform duration-300" id="trackingModalContent">
+        <div class="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center bg-zinc-50 dark:bg-zinc-800/50">
+            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
+                <i class="fas fa-route text-sky-500"></i> Rastreamento
+                <span id="tCodeTitle" class="text-sm px-2 py-0.5 ml-2 bg-sky-100 text-sky-700 dark:bg-sky-900 dark:text-sky-300 rounded-md font-mono"></span>
+            </h3>
+            <button onclick="closeTrackingModal()" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <div class="p-6 max-h-[60vh] overflow-y-auto" id="trackingTimelineContainer">
+            <!-- Loading -->
+            <div id="tLoading" class="flex flex-col items-center justify-center py-8 text-zinc-500">
+                <i class="fas fa-spinner fa-spin text-3xl mb-3 text-sky-500"></i>
+                <p>Buscando atualizações nos Correios...</p>
+            </div>
+            
+            <!-- Result Timeline -->
+            <div id="tResult" class="hidden">
+                <div class="relative border-l-2 border-sky-100 dark:border-sky-900/50 ml-3 space-y-6" id="tEvents">
+                    <!-- Eventos Injetados pelo JS -->
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -366,6 +447,117 @@
             });
         });
         observer.observe(document.documentElement, { attributes: true });
+    }
+    
+    // Tracking Modal Logic
+    const tModal = document.getElementById('trackingModal');
+    const tModalContent = document.getElementById('trackingModalContent');
+    const tLoading = document.getElementById('tLoading');
+    const tResult = document.getElementById('tResult');
+    const tEvents = document.getElementById('tEvents');
+    const tCodeTitle = document.getElementById('tCodeTitle');
+
+    function trackCode(code) {
+        // Show modal
+        tCodeTitle.textContent = code;
+        tResult.classList.add('hidden');
+        tLoading.classList.remove('hidden');
+        
+        tModal.classList.remove('hidden');
+        // Trigger animations
+        setTimeout(() => {
+            tModal.classList.remove('opacity-0');
+            tModalContent.classList.remove('scale-95');
+        }, 10);
+        
+        // Fetch API
+        fetch(`/api/tracking/${code}`)
+            .then(res => res.json())
+            .then(data => {
+                tLoading.classList.add('hidden');
+                
+                if (data.success && data.events && data.events.length > 0) {
+                    renderTimeline(data.events, data.link);
+                    tResult.classList.remove('hidden');
+                } else {
+                    tResult.classList.remove('hidden');
+                    
+                    // Extrai mensagem da API raw ou default se não existir
+                    let errorMessage = data.message || 'Código não encontrado nos Correios ou recém postado.';
+                    
+                    tEvents.innerHTML = `
+                        <div class="ml-6 py-4 text-center text-zinc-500 dark:text-zinc-400">
+                            <i class="fas fa-box-open text-4xl mb-3 text-zinc-300 dark:text-zinc-700"></i>
+                            <p>${errorMessage}</p>
+                            ${data.raw ? `<pre class="text-left mt-4 text-xs bg-zinc-100 dark:bg-zinc-800 p-2 rounded overflow-auto hidden">${JSON.stringify(data.raw, null, 2)}</pre>` : ''}
+                        </div>
+                    `;
+                }
+            })
+            .catch(err => {
+                tLoading.classList.add('hidden');
+                tResult.classList.remove('hidden');
+                tEvents.innerHTML = `
+                    <div class="ml-6 py-4 text-center text-red-500">
+                        <i class="fas fa-exclamation-triangle text-4xl mb-3"></i>
+                        <p>Falha ao comunicar com os Correios. Tente mais tarde.</p>
+                    </div>
+                `;
+            });
+    }
+
+    function renderTimeline(events, link = null) {
+        let html = '';
+        events.forEach((ev, index) => {
+            const isLatest = index === 0;
+            const dotColor = isLatest ? 'bg-sky-500 border-white dark:border-zinc-900' : 'bg-zinc-300 dark:bg-zinc-600 border-white dark:border-zinc-900';
+            const icon = isLatest ? '<i class="fas fa-truck text-xs text-white"></i>' : '';
+            
+            // Tratamento caso a API retorne algo inesperado ou formato estranho
+            const evStatus = ev.status || ev.descricao || ev.description || 'Evento Registrado';
+            const evData = ev.data || ev.date || '--/--/----';
+            const evHora = ev.hora || ev.time || '--:--';
+            const evLocal = ev.local || ev.location || 'Local Não Informado';
+
+            html += `
+                <div class="relative pl-6">
+                    <div class="absolute w-6 h-6 rounded-full border-4 ${dotColor} -left-[14px] top-1 flex items-center justify-center">
+                        ${icon}
+                    </div>
+                    <div class="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-xl border border-zinc-100 dark:border-zinc-800 shadow-sm relative ${isLatest ? 'ring-1 ring-sky-500/30' : ''}">
+                        <div class="font-semibold text-zinc-900 dark:text-white leading-tight mb-1">
+                            ${evStatus}
+                        </div>
+                        <div class="flex items-center gap-3 text-xs text-zinc-500 mb-2">
+                            <span class="flex items-center gap-1.5"><i class="far fa-clock"></i> ${evData} às ${evHora}</span>
+                        </div>
+                        <div class="text-sm text-zinc-600 dark:text-zinc-400">
+                            <i class="fas fa-map-marker-alt text-zinc-400 w-4"></i> ${evLocal}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        if (link) {
+            html += `
+                <div class="mt-8 text-center border-t border-zinc-200 dark:border-zinc-800 pt-4">
+                    <a href="${link}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 text-sm font-medium rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors w-full sm:w-auto justify-center">
+                        <i class="fas fa-external-link-alt"></i> Ver Histórico Completo no Site
+                    </a>
+                </div>
+            `;
+        }
+        
+        tEvents.innerHTML = html;
+    }
+
+    function closeTrackingModal() {
+        tModal.classList.add('opacity-0');
+        tModalContent.classList.add('scale-95');
+        setTimeout(() => {
+            tModal.classList.add('hidden');
+        }, 300);
     }
 </script>
 @endsection

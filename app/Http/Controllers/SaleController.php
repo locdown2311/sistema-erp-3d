@@ -45,6 +45,7 @@ class SaleController extends Controller
             'items.*.variation_id' => 'nullable|exists:product_variations,id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
+            'tracking_code' => 'nullable|string|max:255',
         ]);
 
         $total = collect($validated['items'])->sum(fn($item) => $item['quantity'] * $item['unit_price']);
@@ -56,6 +57,8 @@ class SaleController extends Controller
             'notes' => $validated['notes'] ?? null,
             'total' => $total,
             'status' => 'completed',
+            'tracking_code' => $validated['tracking_code'] ?? null,
+            'shipping_status' => !empty($validated['tracking_code']) ? 'Pendente' : null,
         ]);
 
         foreach ($validated['items'] as $item) {

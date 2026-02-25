@@ -13,7 +13,7 @@
     <form method="POST" action="{{ route('sales.store') }}" id="saleForm" class="p-6">
         @csrf
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
             <div>
                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Cliente</label>
                 <input type="text" name="customer_name" value="{{ old('customer_name') }}" placeholder="Nome do cliente (opcional)" 
@@ -23,6 +23,11 @@
                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Data da Venda <span class="text-red-500">*</span></label>
                 <input type="date" name="sale_date" value="{{ old('sale_date', date('Y-m-d')) }}" required 
                        class="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Cod. Rastreio <span class="text-zinc-500 font-normal">(opcional)</span></label>
+                <input type="text" name="tracking_code" value="{{ old('tracking_code') }}" placeholder="Ex: XX123456789BR" 
+                       class="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none placeholder-zinc-400 dark:placeholder-zinc-600 uppercase">
             </div>
         </div>
 
