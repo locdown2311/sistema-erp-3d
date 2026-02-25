@@ -27,6 +27,10 @@ class ModelerRequestController extends Controller
             'description' => 'required|string',
             'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp,bmp,tiff,heic,heif,pdf|max:20480', // 20MB max
             'budget_range' => 'required|string|max:50',
+        ], [
+            'image.max' => 'O arquivo é muito grande. O tamanho máximo permitido é de 2MB.',
+            'image.mimes' => 'Formato não suportado. Envie imagens ou PDF.',
+            'image.uploaded' => 'Falha ao carregar o arquivo. O arquivo excedeu o limite do servidor (2MB) ou a conexão caiu.',
         ]);
 
         $imagePath = null;
