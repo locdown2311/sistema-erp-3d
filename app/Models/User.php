@@ -14,6 +14,7 @@ class User extends Authenticatable
         'name', 'email', 'password',
         'slug', 'store_name', 'store_logo', 'whatsapp', 'store_description',
         'store_color_primary', 'store_color_accent', 'store_color_bg',
+        'suspended_at', 'suspension_reason',
     ];
 
     protected $hidden = [
@@ -35,10 +36,14 @@ class User extends Authenticatable
     public function tasks() { return $this->hasMany(Task::class); }
     public function printCosts() { return $this->hasMany(PrintCost::class); }
     public function subscriptions() { return $this->hasMany(Subscription::class); }
+    public function wishlists() { return $this->hasMany(Wishlist::class); }
 
+    /**
+     * Retorna o plano atual do usuário.
+     * Se não houver assinatura ativa, retorna o plano Gratuito como fallback.
+     */
     public function currentPlan()
     {
-        // Pega a assinatura mais recente que está ativa
         $subscription = $this->subscriptions()
             ->where('status', 'active')
             ->where(function ($query) {
@@ -48,7 +53,66 @@ class User extends Authenticatable
             ->latest()
             ->first();
 
-        return $subscription ? $subscription->plan : null;
+        if ($subscription) {
+            return $subscription->plan;
+        }
+
+        // Fallback: retorna plano gratuito
+        return Plan::where('slug', 'free')->first();
+    }
+
+    /**
+     * Verifica se o limite do plano para um recurso foi atingido.
+     */
+    public function planLimitReached(string $resource): bool
+    {
+        $plan = $this->currentPlan();
+        if (!$plan) return false; // sem plano, sem limites
+
+        return match ($resource) {
+            'products' => $plan->limitReached('max_products', $this->products()->count()),
+            'sales' => $plan->limitReached('max_sales_per_month', $this->salesThisMonth()),
+            'wishlists' => $plan->limitReached('max_wishlists', $this->wishlists()->count()),
+            default => false,
+        };
+    }
+
+    /**
+     * Retorna o uso atual vs limite para um recurso.
+     * Retorna ['current' => X, 'limit' => Y|null]
+     */
+    public function getPlanUsage(string $resource): array
+    {
+        $plan = $this->currentPlan();
+        if (!$plan) return ['current' => 0, 'limit' => null];
+
+        return match ($resource) {
+            'products' => [
+                'current' => $this->products()->count(),
+                'limit' => $plan->max_products,
+            ],
+            'sales' => [
+                'current' => $this->salesThisMonth(),
+                'limit' => $plan->max_sales_per_month,
+            ],
+            'wishlists' => [
+                'current' => $this->wishlists()->count(),
+                'limit' => $plan->max_wishlists,
+            ],
+            default => ['current' => 0, 'limit' => null],
+        };
+    }
+
+    /**
+     * Contagem de vendas do mês atual.
+     */
+    public function salesThisMonth(): int
+    {
+        return $this->sales()
+            ->where('status', 'completed')
+            ->whereMonth('sale_date', now()->month)
+            ->whereYear('sale_date', now()->year)
+            ->count();
     }
 
     public function getStoreLogoUrlAttribute(): ?string

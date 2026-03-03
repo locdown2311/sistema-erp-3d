@@ -18,6 +18,7 @@ use App\Http\Controllers\ModelerRequestController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\WishlistController;
+use App\Http\Controllers\AdminUserController;
 
 // Public Landing Page (Marketplace Hub)
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -92,6 +93,13 @@ Route::middleware('auth')->group(function () {
 
     // Admin: Modeler Requests
     Route::delete('modeler-requests/{modelerRequest}', [ModelerRequestController::class, 'destroy'])->name('modeler-requests.destroy');
+
+    // Admin: User Management
+    Route::get('panel/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+    Route::put('panel/users/{user}/plan', [AdminUserController::class, 'updatePlan'])->name('admin.users.update-plan');
+    Route::put('panel/users/{user}/suspend', [AdminUserController::class, 'suspend'])->name('admin.users.suspend');
+    Route::put('panel/users/{user}/unsuspend', [AdminUserController::class, 'unsuspend'])->name('admin.users.unsuspend');
+    Route::delete('panel/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
 
     // Wishlists (User specific)
     Route::post('wishlists/refresh-all', [WishlistController::class, 'refreshAll'])->name('wishlists.refresh-all');

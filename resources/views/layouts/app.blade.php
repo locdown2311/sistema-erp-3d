@@ -90,6 +90,10 @@
                     <i class="fas fa-tags w-5 text-center"></i>
                     <span>Ofertas</span>
                 </a>
+                <a href="{{ route('admin.users.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white {{ request()->routeIs('admin.users.*') ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium' : '' }}">
+                    <i class="fas fa-users-cog w-5 text-center"></i>
+                    <span>Gerenciar Usuários</span>
+                </a>
             @endif
 
             <div class="my-4 border-t border-zinc-200 dark:border-zinc-800/50"></div>
@@ -113,6 +117,12 @@
             <a href="{{ route('plans.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white {{ request()->routeIs('plans.*') ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium' : '' }}">
                 <i class="fas fa-star w-5 text-center text-amber-500"></i>
                 <span>Meu Plano</span>
+                @php $userPlan = auth()->user()->currentPlan(); @endphp
+                @if($userPlan && $userPlan->slug === 'free')
+                    <span class="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-indigo-500 to-purple-600 text-white uppercase tracking-wider">Upgrade</span>
+                @elseif($userPlan)
+                    <span class="ml-auto text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400">{{ $userPlan->name }}</span>
+                @endif
             </a>
             
             <a href="{{ route('wishlists.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white {{ request()->routeIs('wishlists.*') ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium' : '' }}">

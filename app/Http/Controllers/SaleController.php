@@ -36,6 +36,14 @@ class SaleController extends Controller
 
     public function store(Request $request)
     {
+        $user = auth()->user();
+        if ($user->planLimitReached('sales')) {
+            $plan = $user->currentPlan();
+            $limit = $plan ? $plan->max_sales_per_month : '?';
+            return redirect()->route('plans.index')
+                ->with('error', "Você atingiu o limite de {$limit} vendas por mês do seu plano. Faça um upgrade!");
+        }
+
         $validated = $request->validate([
             'customer_name' => 'nullable|string|max:255',
             'sale_date' => 'required|date',

@@ -58,9 +58,19 @@ class DashboardController extends Controller
             ->take(8)
             ->get();
 
+        // Plan usage
+        $user = auth()->user();
+        $currentPlan = $user->currentPlan();
+        $planUsage = [
+            'products' => $user->getPlanUsage('products'),
+            'sales' => $user->getPlanUsage('sales'),
+            'wishlists' => $user->getPlanUsage('wishlists'),
+        ];
+
         return view('dashboard.index', compact(
             'totalProducts', 'totalSales', 'totalRevenue', 'pendingTasks',
-            'salesChart', 'recentSales', 'lowStock', 'upcomingTasks', 'modelerRequests', 'activeShippings'
+            'salesChart', 'recentSales', 'lowStock', 'upcomingTasks', 'modelerRequests', 'activeShippings',
+            'currentPlan', 'planUsage'
         ));
     }
 }

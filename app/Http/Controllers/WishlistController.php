@@ -82,6 +82,14 @@ class WishlistController extends Controller
 
     public function store(Request $request)
     {
+        $user = auth()->user();
+        if ($user->planLimitReached('wishlists')) {
+            $plan = $user->currentPlan();
+            $limit = $plan ? $plan->max_wishlists : '?';
+            return redirect()->route('plans.index')
+                ->with('error', "Você atingiu o limite de {$limit} itens na Lista de Desejos do seu plano. Faça um upgrade!");
+        }
+
         $request->validate([
             'url' => 'required|url|max:2000'
         ]);

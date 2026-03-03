@@ -31,14 +31,12 @@ class ProductController extends Controller
     public function create()
     {
         $user = auth()->user();
-        $plan = $user->currentPlan();
 
-        if ($plan && $plan->max_products !== null) {
-            $productCount = $user->products()->count();
-            if ($productCount >= $plan->max_products) {
-                return redirect()->route('plans.index')
-                    ->with('error', "Você atingiu o limite de {$plan->max_products} produtos do seu plano. Faça um upgrade para continuar crescendo!");
-            }
+        if ($user->planLimitReached('products')) {
+            $plan = $user->currentPlan();
+            $limit = $plan ? $plan->max_products : '?';
+            return redirect()->route('plans.index')
+                ->with('error', "Você atingiu o limite de {$limit} produtos do seu plano. Faça um upgrade para continuar crescendo!");
         }
 
         $categories = Product::where('user_id', auth()->id())->distinct()->whereNotNull('category')->pluck('category');
@@ -48,14 +46,10 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-        $plan = $user->currentPlan();
 
-        if ($plan && $plan->max_products !== null) {
-            $productCount = $user->products()->count();
-            if ($productCount >= $plan->max_products) {
-                return redirect()->route('plans.index')
-                    ->with('error', 'Limite de produtos atingido. Faça um upgrade no seu plano.');
-            }
+        if ($user->planLimitReached('products')) {
+            return redirect()->route('plans.index')
+                ->with('error', 'Limite de produtos atingido. Faça um upgrade no seu plano.');
         }
 
         $validated = $request->validate([

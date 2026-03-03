@@ -46,6 +46,48 @@
     </div>
 </div>
 
+{{-- Plan Usage Card --}}
+@if(isset($currentPlan))
+<div class="mb-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 shadow-sm">
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-gauge-high text-indigo-500"></i>
+            <h3 class="font-semibold text-zinc-900 dark:text-white text-sm">Uso do Plano — <span class="text-indigo-500">{{ $currentPlan->name }}</span></h3>
+        </div>
+        <a href="{{ route('plans.index') }}" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium">
+            @if($currentPlan->slug === 'free') <i class="fas fa-bolt mr-1"></i>Fazer Upgrade @else Ver planos @endif
+        </a>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        @foreach(['products' => ['Produtos', 'fa-boxes-stacked', 'emerald'], 'sales' => ['Vendas/mês', 'fa-cash-register', 'blue'], 'wishlists' => ['Wishlists', 'fa-heart', 'pink']] as $key => [$label, $icon, $color])
+            @php
+                $u = $planUsage[$key];
+                $pct = $u['limit'] ? min(round(($u['current'] / $u['limit']) * 100), 100) : 0;
+                $isNearLimit = $u['limit'] && $pct >= 80;
+            @endphp
+            <div class="flex items-center gap-3 p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
+                <i class="fas {{ $icon }} text-{{ $color }}-500 text-lg"></i>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between text-xs mb-1">
+                        <span class="text-zinc-500 dark:text-zinc-400">{{ $label }}</span>
+                        <span class="font-bold {{ $isNearLimit ? 'text-amber-500' : 'text-zinc-700 dark:text-zinc-300' }}">{{ $u['current'] }}/{{ $u['limit'] ?? '∞' }}</span>
+                    </div>
+                    @if($u['limit'])
+                        <div class="w-full bg-zinc-200 dark:bg-zinc-700 rounded-full h-1.5">
+                            <div class="h-1.5 rounded-full transition-all duration-500 {{ $pct >= 90 ? 'bg-red-500' : ($pct >= 70 ? 'bg-amber-400' : 'bg-'.$color.'-500') }}" style="width: {{ $pct }}%"></div>
+                        </div>
+                    @else
+                        <div class="w-full bg-zinc-200 dark:bg-zinc-700 rounded-full h-1.5">
+                            <div class="h-1.5 rounded-full bg-emerald-500/30 w-full"></div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endforeach
+    </div>
+</div>
+@endif
+
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
     {{-- Sales Chart --}}
     <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 sm:p-6 shadow-sm lg:col-span-2 flex flex-col">

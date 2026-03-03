@@ -21,6 +21,17 @@ class LoginController extends Controller
         ]);
 
         if (Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['password']], $request->boolean('remember'))) {
+            // Verificar se o usuário está suspenso
+            $user = Auth::user();
+            if ($user->suspended_at) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $reason = $user->suspension_reason ? " Motivo: {$user->suspension_reason}" : '';
+                return back()->withErrors([
+                    'email' => "Sua conta foi suspensa.{$reason} Entre em contato com o suporte.",
+                ])->onlyInput('email');
+            }
+
             $request->session()->regenerate();
             return redirect()->intended(route('dashboard'));
         }
