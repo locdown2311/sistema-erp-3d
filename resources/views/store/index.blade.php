@@ -7,9 +7,9 @@
     <meta property="og:title" content="{{ $store->store_name }} — Loja">
     <meta property="og:site_name" content="{{ $store->store_name }}">
     @if($store->store_logo)
-        <meta property="og:image" content="{{ asset('storage/' . $store->store_logo) }}">
-        <meta property="twitter:image" content="{{ asset('storage/' . $store->store_logo) }}">
-        <link rel="icon" href="{{ asset('storage/' . $store->store_logo) }}">
+        <meta property="og:image" content="{{ $store->store_logo_url }}">
+        <meta property="twitter:image" content="{{ $store->store_logo_url }}">
+        <link rel="icon" href="{{ $store->store_logo_thumbnail_url }}">
     @endif
     <meta property="twitter:card" content="summary_large_image">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,7 +51,7 @@
             <div class="flex flex-col sm:flex-row items-center sm:items-end gap-6 sm:gap-8">
                 <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden flex-shrink-0 border-4 border-white dark:border-zinc-900 bg-white dark:bg-zinc-800 shadow-xl flex items-center justify-center transform -rotate-3 transition-transform hover:rotate-0 duration-300">
                     @if($store->store_logo)
-                        <img src="{{ asset('storage/' . $store->store_logo) }}" alt="{{ $store->store_name }}" class="w-full h-full object-cover">
+                        <img src="{{ $store->store_logo_url }}" alt="{{ $store->store_name }}" class="w-full h-full object-cover">
                     @else
                         <i class="fas fa-store text-4xl text-zinc-300 dark:text-zinc-600"></i>
                     @endif
@@ -109,7 +109,10 @@
                     <div class="group bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 store-card-hover flex flex-col h-full transform" id="product-card-{{ $product->id }}">
                         <div class="store-img-bg relative aspect-[4/3] w-full flex items-center justify-center overflow-hidden p-6">
                             @if($product->image_path)
-                                <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}" class="w-full h-full object-contain filter drop-shadow-lg group-hover:scale-110 transition-transform duration-500">
+                                <img src="{{ $product->thumbnail_url }}" 
+                                     alt="{{ $product->name }}" 
+                                     loading="lazy"
+                                     class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 relative z-0">
                             @else
                                 <i class="fas fa-cube text-5xl text-store-primary opacity-50 group-hover:scale-110 transition-transform duration-500"></i>
                             @endif
@@ -162,6 +165,13 @@
                     </div>
                 @endforeach
             </div>
+
+            {{-- Pagination --}}
+            @if($products->hasPages())
+                <div class="mt-8">
+                    {{ $products->links() }}
+                </div>
+            @endif
 
             <script>
                 function updateProduct(productId, productName, phone) {

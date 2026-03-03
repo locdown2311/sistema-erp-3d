@@ -18,7 +18,7 @@
             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div class="w-20 h-20 rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center overflow-hidden flex-shrink-0">
                     @if($user->store_logo)
-                        <img src="{{ asset('storage/' . $user->store_logo) }}" alt="Logo" class="w-full h-full object-cover">
+                        <img src="{{ $user->store_logo_url }}" alt="Logo" class="w-full h-full object-cover">
                     @else
                         <i class="fas fa-store text-3xl text-zinc-400 dark:text-zinc-600"></i>
                     @endif
@@ -158,6 +158,102 @@
             </div>
         </div>
 
+        <h4 class="text-base font-semibold text-blue-600 dark:text-blue-500 mt-10 mb-2 pb-2 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-2">
+            <i class="fas fa-file-invoice"></i> Configurações Fiscais (NF-e)
+        </h4>
+        <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-5">Dados necessários para assinar e enviar notas fiscais para a SEFAZ.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+            <div>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Ambiente da NF-e</label>
+                <select name="nfe_ambiente" class="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none appearance-none pr-8 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239ca3af%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px_12px] bg-[right_12px_center] bg-no-repeat">
+                    <option value="2" {{ isset($settings['nfe_ambiente']) && $settings['nfe_ambiente'] == '2' ? 'selected' : '' }}>Homologação (Testes)</option>
+                    <option value="1" {{ isset($settings['nfe_ambiente']) && $settings['nfe_ambiente'] == '1' ? 'selected' : '' }}>Produção (Oficial)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">UF do Emissor (Sigla)</label>
+                <input type="text" name="nfe_uf" value="{{ $settings['nfe_uf'] ?? 'SP' }}" maxlength="2"
+                       class="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white uppercase focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none">
+            </div>
+        </div>
+
+        <div class="mb-5 space-y-4">
+            <h5 class="text-sm font-medium text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-800 pb-1 flex justify-between items-center">
+                Dados Padrão do Emitente
+                <span id="cep-loading" class="text-xs text-indigo-500 font-medium hidden">
+                    <i class="fas fa-spinner fa-spin mr-1"></i> Buscando CEP...
+                </span>
+            </h5>
+            
+            <div>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Razão Social</label>
+                <input type="text" name="nfe_emit_nome" value="{{ $settings['nfe_emit_nome'] ?? '' }}" class="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none" placeholder="Sua Empresa LTDA">
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">CNPJ</label>
+                    <input type="text" name="nfe_emit_cnpj" value="{{ $settings['nfe_emit_cnpj'] ?? '' }}" class="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none" placeholder="00.000.000/0000-00">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Inscrição Estadual (IE)</label>
+                    <input type="text" name="nfe_emit_ie" value="{{ $settings['nfe_emit_ie'] ?? '' }}" class="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none" placeholder="111.111.111.111">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="md:col-span-1">
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">CEP do Emitente</label>
+                    <input type="text" id="nfe_emit_cep" name="nfe_emit_cep" value="{{ $settings['nfe_emit_cep'] ?? '' }}" class="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none" placeholder="00000-000">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Logradouro / Rua</label>
+                    <input type="text" id="nfe_emit_logradouro" name="nfe_emit_logradouro" value="{{ $settings['nfe_emit_logradouro'] ?? '' }}" class="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+                <div class="md:col-span-1">
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Número</label>
+                    <input type="text" id="nfe_emit_numero" name="nfe_emit_numero" value="{{ $settings['nfe_emit_numero'] ?? '' }}" class="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none">
+                </div>
+                <div class="md:col-span-1">
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Bairro</label>
+                    <input type="text" id="nfe_emit_bairro" name="nfe_emit_bairro" value="{{ $settings['nfe_emit_bairro'] ?? '' }}" class="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none">
+                </div>
+                <div class="md:col-span-1">
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Município</label>
+                    <input type="text" id="nfe_emit_municipio" name="nfe_emit_municipio" value="{{ $settings['nfe_emit_municipio'] ?? '' }}" class="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none">
+                </div>
+                <div class="md:col-span-1">
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">UF</label>
+                    <input type="text" id="nfe_emit_uf" name="nfe_emit_uf" value="{{ $settings['nfe_emit_uf'] ?? '' }}" maxlength="2" class="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none uppercase">
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+            <div>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Certificado Digital (A1 .pfx)</label>
+                <input type="file" name="nfe_certificado" accept=".pfx,.p12"
+                       class="block w-full text-sm text-zinc-500 dark:text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-500/10 dark:file:text-blue-400 dark:hover:file:bg-blue-500/20 transition-colors cursor-pointer border border-zinc-200 dark:border-zinc-800 rounded-lg bg-zinc-50 dark:bg-zinc-950 p-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                @if(isset($settings['nfe_certificado_path']) && $settings['nfe_certificado_path'])
+                    <p class="mt-2 text-xs text-emerald-600 dark:text-emerald-500 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[300px]" title="Certificado já enviado">
+                        <i class="fas fa-check-circle"></i> Certificado já configurado! (Faça upload apenas se quiser trocar)
+                    </p>
+                @else
+                    <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">Somente arquivos com terminação .pfx</p>
+                @endif
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Senha do Certificado</label>
+                <input type="password" name="nfe_certificado_senha" placeholder="{{ isset($settings['nfe_certificado_senha']) ? '******** (Deixe em branco para manter)' : 'Digite a senha do PFX' }}"
+                       class="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none">
+            </div>
+        </div>
+
         <div class="pt-6 border-t border-zinc-200 dark:border-zinc-800 flex justify-end">
             <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 dark:focus:ring-offset-zinc-900">
                 <i class="fas fa-save"></i> Salvar Configurações
@@ -165,6 +261,7 @@
         </div>
     </form>
 </div>
+
 @endsection
 
 @section('scripts')
@@ -195,5 +292,61 @@ caHex.addEventListener('input', () => {
         updatePreview(); 
     }
 });
+
+// --- VIA CEP Logic para Configurações do Emitente ---
+const cepInputEmit = document.getElementById('nfe_emit_cep');
+const loadingCepEmit = document.getElementById('cep-loading');
+
+if (cepInputEmit) {
+    // Formata CEP enquanto digita
+    cepInputEmit.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 5) {
+            value = value.substring(0, 5) + '-' + value.substring(5, 8);
+        }
+        e.target.value = value;
+    });
+
+    // Busca BrasilAPI no Blur ou Enter
+    const searchCepEmit = async () => {
+        const cep = cepInputEmit.value.replace(/\D/g, '');
+        
+        if (cep.length === 8) {
+            if(loadingCepEmit) loadingCepEmit.classList.remove('hidden');
+            cepInputEmit.classList.add('opacity-50');
+            
+            try {
+                const response = await fetch(`https://brasilapi.com.br/api/cep/v2/${cep}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('nfe_emit_logradouro').value = data.street || '';
+                    document.getElementById('nfe_emit_bairro').value = data.neighborhood || '';
+                    document.getElementById('nfe_emit_municipio').value = data.city || '';
+                    document.getElementById('nfe_emit_uf').value = data.state || '';
+                    // Foco no número para o usuário finalizar
+                    document.getElementById('nfe_emit_numero').focus();
+                } else {
+                    alert('CEP não encontrado na BrasilAPI.');
+                }
+            } catch (error) {
+                console.error('Erro ao buscar o CEP:', error);
+                alert('Erro ao comunicar com o servidor de CEP.');
+            } finally {
+                if(loadingCepEmit) loadingCepEmit.classList.add('hidden');
+                cepInputEmit.classList.remove('opacity-50');
+            }
+        }
+    };
+
+    cepInputEmit.addEventListener('blur', searchCepEmit);
+    
+    cepInputEmit.addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            searchCepEmit();
+        }
+    });
+}
 </script>
 @endsection

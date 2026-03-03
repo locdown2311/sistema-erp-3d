@@ -15,6 +15,9 @@ use App\Http\Controllers\StoreController;
 use App\Http\Controllers\OfferController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ModelerRequestController;
+use App\Http\Controllers\PlanController;
+use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\WishlistController;
 
 // Public Landing Page (Marketplace Hub)
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -26,7 +29,7 @@ Route::post('procurar-modelador', [ModelerRequestController::class, 'store'])->n
 // Auth routes (guests only)
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('login', [LoginController::class, 'login']);
+    Route::post('login', [LoginController::class, 'login'])->middleware('throttle:5,1');
     Route::get('register', [RegisterController::class, 'showRegistrationForm'])->name('register');
     Route::post('register', [RegisterController::class, 'register']);
 });
@@ -43,9 +46,17 @@ Route::get('loja/{slug}/latest-offer', [StoreController::class, 'latestOffer'])-
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // NFe Prototype routes
+    Route::get('nfe', [\App\Http\Controllers\NFeController::class, 'index'])->name('nfe.index');
+    Route::post('nfe/emit', [\App\Http\Controllers\NFeController::class, 'emit'])->name('nfe.emit');
+
+    Route::get('plans', [PlanController::class, 'index'])->name('plans.index');
+    Route::post('subscriptions', [SubscriptionController::class, 'store'])->name('subscriptions.store');
+
     Route::resource('products', ProductController::class);
     Route::post('products/{product}/variations', [ProductController::class, 'addVariation'])->name('products.variations.store');
     Route::delete('products/{product}/variations/{variation}', [ProductController::class, 'destroyVariation'])->name('products.variations.destroy');
+    Route::get('products/{product}/image-status', [ProductController::class, 'imageStatus'])->name('products.image-status');
 
     Route::get('filaments', [FilamentController::class, 'index'])->name('filaments.index');
     Route::post('filaments', [FilamentController::class, 'store'])->name('filaments.store');
@@ -81,4 +92,8 @@ Route::middleware('auth')->group(function () {
 
     // Admin: Modeler Requests
     Route::delete('modeler-requests/{modelerRequest}', [ModelerRequestController::class, 'destroy'])->name('modeler-requests.destroy');
+
+    // Wishlists (User specific)
+    Route::post('wishlists/refresh-all', [WishlistController::class, 'refreshAll'])->name('wishlists.refresh-all');
+    Route::resource('wishlists', WishlistController::class)->only(['index', 'store', 'destroy']);
 });

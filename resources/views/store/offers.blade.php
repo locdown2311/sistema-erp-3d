@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ofertas — {{ $store->store_name }}</title>
     @if($store->store_logo)
-        <link rel="icon" href="{{ asset('storage/' . $store->store_logo) }}">
+        <link rel="icon" href="{{ $store->store_logo_thumbnail_url }}">
     @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -45,7 +45,7 @@
             <div class="flex flex-col sm:flex-row items-center sm:items-end gap-6 sm:gap-8">
                 <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden flex-shrink-0 border-4 border-white dark:border-zinc-900 bg-white dark:bg-zinc-800 shadow-xl flex items-center justify-center transform hover:-rotate-3 transition-transform duration-300">
                     @if($store->store_logo)
-                        <img src="{{ asset('storage/' . $store->store_logo) }}" alt="{{ $store->store_name }}" class="w-full h-full object-cover">
+                        <img src="{{ $store->store_logo_url }}" alt="{{ $store->store_name }}" class="w-full h-full object-cover">
                     @else
                         <i class="fas fa-store text-4xl text-zinc-300 dark:text-zinc-600"></i>
                     @endif
@@ -108,7 +108,10 @@
 
                         <div class="offer-img-bg relative aspect-[4/3] w-full flex items-center justify-center overflow-hidden p-6">
                             @if($offer->image_path)
-                                <img src="{{ asset('storage/' . $offer->image_path) }}" alt="{{ $offer->name }}" class="w-full h-full object-contain filter drop-shadow-md group-hover:scale-110 transition-transform duration-500">
+                                <img src="{{ $offer->thumbnail_url }}" 
+                                     alt="{{ $offer->name }}" 
+                                     loading="lazy"
+                                     class="w-full h-full object-contain filter drop-shadow-md group-hover:scale-110 transition-transform duration-500 relative z-0">
                             @else
                                 <i class="fas fa-tag text-5xl text-orange-500 opacity-30 group-hover:scale-110 transition-transform duration-500"></i>
                             @endif
