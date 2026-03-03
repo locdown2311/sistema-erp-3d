@@ -146,7 +146,7 @@
                         <form method="POST" action="{{ route('subscriptions.store') }}">
                             @csrf
                             <input type="hidden" name="plan_id" value="{{ $plan->id }}">
-                            <button type="submit" class="w-full py-3 px-4 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-semibold text-sm hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 shadow-sm hover:shadow-md">
+                            <button type="submit" class="w-full py-3 px-4 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-semibold text-sm hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer hover:scale-[1.02]">
                                 Ativar Plano Gratuito
                             </button>
                         </form>
@@ -154,7 +154,7 @@
                         <form method="POST" action="{{ route('subscriptions.store') }}">
                             @csrf
                             <input type="hidden" name="plan_id" value="{{ $plan->id }}">
-                            <button type="submit" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r {{ $gradient }} text-white font-semibold text-sm hover:opacity-90 transition-all duration-200 shadow-lg hover:shadow-xl hover:shadow-{{ $isPopular ? 'indigo' : 'amber' }}-500/20">
+                            <button type="submit" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r {{ $gradient }} text-white font-semibold text-sm hover:brightness-110 transition-all duration-200 shadow-lg hover:shadow-xl cursor-pointer hover:scale-[1.02]">
                                 <i class="fas fa-bolt mr-1"></i> Fazer Upgrade
                             </button>
                         </form>

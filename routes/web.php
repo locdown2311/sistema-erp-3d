@@ -104,4 +104,12 @@ Route::middleware('auth')->group(function () {
     // Wishlists (User specific)
     Route::post('wishlists/refresh-all', [WishlistController::class, 'refreshAll'])->name('wishlists.refresh-all');
     Route::resource('wishlists', WishlistController::class)->only(['index', 'store', 'destroy']);
+
+    // Plans & Subscriptions
+    Route::get('plans', [PlanController::class, 'index'])->name('plans.index');
+    Route::post('subscriptions', [SubscriptionController::class, 'store'])->name('subscriptions.store');
+    Route::get('subscriptions/callback', [SubscriptionController::class, 'callback'])->name('subscriptions.callback');
 });
+
+// Webhook do Mercado Pago (sem autenticação)
+Route::post('webhooks/mercadopago', [SubscriptionController::class, 'webhook'])->name('subscriptions.webhook');
