@@ -35,10 +35,11 @@ class ModelerRequestController extends Controller
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('modeler_requests', 'public');
+            $imagePath = 'modeler_requests/pedido_' . uniqid() . '.' . $request->file('image')->getClientOriginalExtension();
+            \Illuminate\Support\Facades\Storage::disk('public')->put($imagePath, file_get_contents($request->file('image')));
         }
 
-        ModelerRequest::create([
+        $modelerRequest = ModelerRequest::create([
             'user_id' => auth()->id(), // null if guest
             'name' => $validated['name'],
             'email' => $validated['email'],
@@ -47,6 +48,10 @@ class ModelerRequestController extends Controller
             'image_path' => $imagePath,
             'budget_range' => $validated['budget_range'],
         ]);
+
+        if ($imagePath) {
+            \App\Jobs\UploadImageToPixelDrain::dispatch($modelerRequest, $imagePath, 'image_path');
+        }
 
         return redirect()->route('home')->with('success', 'Sua solicitação foi enviada com sucesso! Um modelador entrará em contato em breve.');
     }

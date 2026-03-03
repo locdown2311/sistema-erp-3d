@@ -29,7 +29,7 @@
                     <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                         <td class="px-6 py-4 w-16">
                             @if($offer->image_path)
-                                <img src="{{ asset('storage/' . $offer->image_path) }}" alt="" class="w-12 h-12 rounded-lg object-cover border border-zinc-200 dark:border-zinc-700">
+                                <img src="{{ $offer->thumbnail_url }}" alt="" class="w-12 h-12 rounded-lg object-cover border border-zinc-200 dark:border-zinc-700">
                             @else
                                 <div class="w-12 h-12 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center border border-zinc-200 dark:border-zinc-700">
                                     <i class="fas fa-image text-zinc-400"></i>

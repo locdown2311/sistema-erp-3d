@@ -115,7 +115,7 @@
                             
                             <div class="relative w-28 h-28 rounded-full shadow-[0_0_0_4px_rgba(255,255,255,1)] dark:shadow-[0_0_0_4px_rgba(39,39,42,1)] group-hover:shadow-[0_0_0_4px_rgba(16,185,129,0.2)] transition-shadow duration-500 mb-6 overflow-hidden flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 z-10">
                                 @if($store->store_logo)
-                                    <img src="{{ asset('storage/' . $store->store_logo) }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="{{ $store->store_name }}">
+                                    <img src="{{ $store->store_logo_url }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="{{ $store->store_name }}">
                                 @else
                                     <i class="fas fa-store text-3xl text-zinc-400 dark:text-zinc-600 group-hover:scale-110 transition-transform duration-700"></i>
                                 @endif
@@ -153,7 +153,7 @@
                         <div class="group flex flex-col bg-white/70 dark:bg-zinc-900/40 backdrop-blur-xl border border-zinc-200 dark:border-white/10 rounded-[2rem] hover:-translate-y-2 transition-all duration-500 overflow-hidden shadow-sm hover:shadow-xl dark:shadow-none dark:hover:shadow-[0_0_30px_rgba(0,0,0,0.5)]">
                             <div class="relative aspect-[4/3] bg-zinc-100/50 dark:bg-zinc-950/50 flex items-center justify-center overflow-hidden p-6 z-0">
                                 @if($offer->image_path)
-                                    <img src="{{ asset('storage/' . $offer->image_path) }}" class="w-full h-full object-contain filter drop-shadow-lg group-hover:scale-110 transition-transform duration-700" alt="{{ $offer->name }}">
+                                    <img src="{{ $offer->image_url }}" class="w-full h-full object-contain filter drop-shadow-lg group-hover:scale-110 transition-transform duration-700" alt="{{ $offer->name }}">
                                 @else
                                     <i class="fas fa-box text-6xl text-zinc-300 dark:text-zinc-700 group-hover:scale-110 transition-transform duration-700"></i>
                                 @endif
@@ -172,7 +172,7 @@
                                 
                                 <div class="flex items-center gap-2 mb-3">
                                     @if($owner && $owner->store_logo)
-                                        <img src="{{ asset('storage/' . $owner->store_logo) }}" class="w-6 h-6 rounded-full object-cover">
+                                        <img src="{{ $owner->store_logo_url }}" class="w-6 h-6 rounded-full object-cover">
                                     @else
                                         <div class="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-500 text-[10px]">
                                             <i class="fas fa-store"></i>

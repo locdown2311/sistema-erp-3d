@@ -18,7 +18,8 @@ RUN apt-get update && apt-get install -y \
     sqlite3 \
     libsqlite3-dev \
     nodejs \
-    npm
+    npm \
+    supervisor
 
 # Limpa o cache apt
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -66,12 +67,47 @@ RUN mkdir -p /var/www/html/storage/app/public
 
 EXPOSE 80
 
-# Script de entrypoint embutido para rodar chown na montagem do volume
+# Cria pasta para os logs do supervisor
+RUN mkdir -p /var/log/supervisor
+
+# Configura o Supervisor para rodar o Apache e o Worker do Laravel
+COPY <<-"EOF" /etc/supervisor/conf.d/supervisord.conf
+[supervisord]
+nodaemon=true
+user=root
+logfile=/var/log/supervisor/supervisord.log
+pidfile=/var/run/supervisord.pid
+
+[program:apache2]
+command=apache2-foreground
+autostart=true
+autorestart=true
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+
+[program:laravel-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /var/www/html/artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=www-data
+numprocs=1
+redirect_stderr=true
+stdout_logfile=/var/www/html/storage/logs/worker.log
+stopwaitsecs=3600
+EOF
+
+# Script de entrypoint modificado para inicializar o Supervisor
 COPY --chmod=755 <<-"EOF" /usr/local/bin/entrypoint.sh
 #!/bin/sh
-# Ajusta permissões do storage
+# Ajusta permissões do storage antes de iniciar os serviços
 chown -R www-data:www-data /var/www/html/storage
-exec apache2-foreground
+# Executa o supervisor que gerenciará o Apache e a Fila
+exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
 EOF
 
 CMD ["/usr/local/bin/entrypoint.sh"]

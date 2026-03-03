@@ -49,17 +49,24 @@ class OfferController extends Controller
         ]);
 
         // Handle image
+        $localPath = null;
         if ($request->filled('cropped_image')) {
-            $validated['image_path'] = $this->saveBase64Image($request->cropped_image);
+            $localPath = $this->saveBase64Image($request->cropped_image);
+            $validated['image_path'] = $localPath;
         } elseif ($request->hasFile('image')) {
-            $validated['image_path'] = $request->file('image')->store('offers', 'public');
+            $pixelDrain = app(\App\Services\PixelDrainService::class);
+            $url = $pixelDrain->uploadFile($request->file('image'));
+            if ($url) {
+                $validated['image_path'] = str_replace('https://pixeldrain.com/api/file/', '', $url);
+            }
         } elseif ($request->filled('og_image_url')) {
-            $validated['image_path'] = $this->downloadRemoteImage($request->og_image_url);
+            $localPath = $this->downloadRemoteImage($request->og_image_url);
+            $validated['image_path'] = $localPath;
         }
 
         $validated['active'] = $request->has('active');
 
-        Offer::create($validated);
+        $offer = Offer::create($validated);
 
         return redirect()->route('offers.index')
             ->with('success', 'Oferta criada com sucesso!');
@@ -85,12 +92,16 @@ class OfferController extends Controller
             'active' => 'sometimes|boolean',
         ]);
 
+        $localPath = null;
         if ($request->filled('cropped_image')) {
-            if ($offer->image_path) Storage::disk('public')->delete($offer->image_path);
-            $validated['image_path'] = $this->saveBase64Image($request->cropped_image);
+            $localPath = $this->saveBase64Image($request->cropped_image);
+            $validated['image_path'] = $localPath;
         } elseif ($request->hasFile('image')) {
-            if ($offer->image_path) Storage::disk('public')->delete($offer->image_path);
-            $validated['image_path'] = $request->file('image')->store('offers', 'public');
+            $pixelDrain = app(\App\Services\PixelDrainService::class);
+            $url = $pixelDrain->uploadFile($request->file('image'));
+            if ($url) {
+                $validated['image_path'] = str_replace('https://pixeldrain.com/api/file/', '', $url);
+            }
         }
 
         $validated['active'] = $request->has('active');
@@ -104,7 +115,6 @@ class OfferController extends Controller
     public function destroy(Offer $offer)
     {
         $this->authorizeAdmin();
-        if ($offer->image_path) Storage::disk('public')->delete($offer->image_path);
         $offer->delete();
         return redirect()->route('offers.index')
             ->with('success', 'Oferta removida!');
@@ -112,11 +122,14 @@ class OfferController extends Controller
 
     private function saveBase64Image(string $base64): string
     {
-        $image = preg_replace('/^data:image\/\w+;base64,/', '', $base64);
-        $image = base64_decode($image);
-        $filename = 'offers/' . uniqid() . '.png';
-        Storage::disk('public')->put($filename, $image);
-        return $filename;
+        $pixelDrain = app(\App\Services\PixelDrainService::class);
+        $url = $pixelDrain->uploadBase64($base64, uniqid() . '.png');
+        
+        if ($url) {
+            return str_replace('https://pixeldrain.com/api/file/', '', $url);
+        }
+        
+        throw new \Exception('Falha ao enviar imagem da oferta para o Pixeldrain');
     }
 
     private function downloadRemoteImage(string $url): ?string
@@ -133,9 +146,16 @@ class OfferController extends Controller
             if (str_contains($contentType, 'png')) $ext = 'png';
             elseif (str_contains($contentType, 'webp')) $ext = 'webp';
 
-            $filename = 'offers/' . uniqid() . '.' . $ext;
-            Storage::disk('public')->put($filename, $response->body());
-            return $filename;
+            $base64 = 'data:' . ($contentType ?? 'image/jpeg') . ';base64,' . base64_encode($response->body());
+
+            $pixelDrain = app(\App\Services\PixelDrainService::class);
+            $url = $pixelDrain->uploadBase64($base64, uniqid() . '.' . $ext);
+            
+            if ($url) {
+                return str_replace('https://pixeldrain.com/api/file/', '', $url);
+            }
+            
+            return null;
         } catch (\Exception $e) {
             return null;
         }

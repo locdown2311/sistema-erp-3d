@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'pixeldrain' => [
+        'key' => env('PIXELDRAIN_API_KEY'),
+    ],
+
 ];

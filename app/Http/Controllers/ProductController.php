@@ -7,6 +7,7 @@ use App\Models\ProductVariation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Services\PixelDrainService;
 
 class ProductController extends Controller
 {
@@ -21,7 +22,7 @@ class ProductController extends Controller
             $query->where('category', $request->category);
         }
 
-        $products = $query->orderBy('name')->get();
+        $products = $query->orderBy('name')->paginate(24)->withQueryString();
         $categories = Product::where('user_id', auth()->id())->distinct()->whereNotNull('category')->pluck('category');
 
         return view('products.index', compact('products', 'categories'));
@@ -29,12 +30,34 @@ class ProductController extends Controller
 
     public function create()
     {
+        $user = auth()->user();
+        $plan = $user->currentPlan();
+
+        if ($plan && $plan->max_products !== null) {
+            $productCount = $user->products()->count();
+            if ($productCount >= $plan->max_products) {
+                return redirect()->route('plans.index')
+                    ->with('error', "Você atingiu o limite de {$plan->max_products} produtos do seu plano. Faça um upgrade para continuar crescendo!");
+            }
+        }
+
         $categories = Product::where('user_id', auth()->id())->distinct()->whereNotNull('category')->pluck('category');
         return view('products.create', compact('categories'));
     }
 
     public function store(Request $request)
     {
+        $user = auth()->user();
+        $plan = $user->currentPlan();
+
+        if ($plan && $plan->max_products !== null) {
+            $productCount = $user->products()->count();
+            if ($productCount >= $plan->max_products) {
+                return redirect()->route('plans.index')
+                    ->with('error', 'Limite de produtos atingido. Faça um upgrade no seu plano.');
+            }
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -49,13 +72,19 @@ class ProductController extends Controller
         $validated['print_time_hours'] = $validated['print_time_hours'] ?? 0;
         $validated['weight_grams'] = $validated['weight_grams'] ?? 0;
 
+        $localPath = null;
         if ($request->filled('cropped_image')) {
-            $validated['image_path'] = $this->saveBase64Image($request->cropped_image);
+            $data = explode(',', $request->cropped_image, 2);
+            $imageData = base64_decode($data[1] ?? $data[0]);
+            $localPath = 'products/' . uniqid() . '.jpg';
+            \Illuminate\Support\Facades\Storage::disk('public')->put($localPath, $imageData);
+            $validated['image_path'] = $localPath;
         } elseif ($request->hasFile('image')) {
-            $validated['image_path'] = $request->file('image')->store('products', 'public');
+            $localPath = $request->file('image')->store('products', 'public');
+            $validated['image_path'] = $localPath;
         }
 
-        Product::create($validated);
+        $product = Product::create($validated);
 
         return redirect()->route('products.index')
             ->with('success', 'Produto criado com sucesso!');
@@ -93,10 +122,16 @@ class ProductController extends Controller
         $validated['print_time_hours'] = $validated['print_time_hours'] ?? 0;
         $validated['weight_grams'] = $validated['weight_grams'] ?? 0;
 
+        $localPath = null;
         if ($request->filled('cropped_image')) {
-            $validated['image_path'] = $this->saveBase64Image($request->cropped_image);
+            $data = explode(',', $request->cropped_image, 2);
+            $imageData = base64_decode($data[1] ?? $data[0]);
+            $localPath = 'products/' . uniqid() . '.jpg';
+            \Illuminate\Support\Facades\Storage::disk('public')->put($localPath, $imageData);
+            $validated['image_path'] = $localPath;
         } elseif ($request->hasFile('image')) {
-            $validated['image_path'] = $request->file('image')->store('products', 'public');
+            $localPath = $request->file('image')->store('products', 'public');
+            $validated['image_path'] = $localPath;
         }
 
         $validated['active'] = $request->has('active');
@@ -147,18 +182,14 @@ class ProductController extends Controller
         }
     }
 
-    private function saveBase64Image(string $base64): string
+    public function imageStatus(Product $product)
     {
-        $data = explode(',', $base64, 2);
-        $imageData = base64_decode($data[1] ?? $data[0]);
-
-        $ext = 'jpg';
-        if (isset($data[0]) && str_contains($data[0], 'png')) $ext = 'png';
-        elseif (isset($data[0]) && str_contains($data[0], 'webp')) $ext = 'webp';
-
-        $filename = 'products/' . Str::random(40) . '.' . $ext;
-        Storage::disk('public')->put($filename, $imageData);
-
-        return $filename;
+        $this->authorizeProduct($product);
+        $isPending = $product->image_path && str_starts_with($product->image_path, 'products/tmp_');
+        return response()->json([
+            'thumbnail_url' => $product->thumbnail_url,
+            'is_pending' => $isPending
+        ]);
     }
+
 }

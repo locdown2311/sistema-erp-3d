@@ -34,7 +34,7 @@
             </div>
 
             <div class="mb-5">
-                <x-image-upload :currentImage="$product->image_path" />
+                <x-image-upload :current-image="$product->image_path" :image-url="$product->thumbnail_url" />
             </div>
 
             <div class="mb-5">

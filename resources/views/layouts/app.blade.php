@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Central 3D') — {{ \App\Models\Setting::get('company_name', 'ERP Impressão 3D') }}</title>
     @if(auth()->check() && auth()->user()->store_logo)
-        <link rel="icon" href="{{ asset('storage/' . auth()->user()->store_logo) }}">
+        <link rel="icon" href="{{ auth()->user()->store_logo_thumbnail_url }}">
     @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -37,7 +37,7 @@
         <div class="h-16 flex items-center justify-between px-6 border-b border-zinc-200 dark:border-zinc-800">
             <div class="flex items-center gap-3">
                 @if(auth()->check() && auth()->user()->store_logo)
-                    <img src="{{ asset('storage/' . auth()->user()->store_logo) }}" alt="Logo" class="w-7 h-7 rounded object-cover">
+                    <img src="{{ auth()->user()->store_logo_thumbnail_url }}" alt="Logo" class="w-7 h-7 rounded object-cover">
                 @else
                     <i class="fas fa-cube text-xl text-zinc-900 dark:text-zinc-100"></i>
                 @endif
@@ -75,6 +75,10 @@
                 <i class="fas fa-calculator w-5 text-center"></i>
                 <span>Custos 3D</span>
             </a>
+            <a href="{{ route('nfe.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white {{ request()->routeIs('nfe.*') ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium' : '' }}">
+                <i class="fas fa-file-invoice w-5 text-center"></i>
+                <span>Notas Fiscais</span>
+            </a>
             <a href="{{ route('calendar.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white {{ request()->routeIs('calendar.*') ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium' : '' }}">
                 <i class="fas fa-calendar-alt w-5 text-center"></i>
                 <span>Calendário</span>
@@ -104,6 +108,16 @@
             <a href="{{ route('settings.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white {{ request()->routeIs('settings.*') ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium' : '' }}">
                 <i class="fas fa-cog w-5 text-center"></i>
                 <span>Configurações</span>
+            </a>
+            
+            <a href="{{ route('plans.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white {{ request()->routeIs('plans.*') ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium' : '' }}">
+                <i class="fas fa-star w-5 text-center text-amber-500"></i>
+                <span>Meu Plano</span>
+            </a>
+            
+            <a href="{{ route('wishlists.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white {{ request()->routeIs('wishlists.*') ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium' : '' }}">
+                <i class="fas fa-heart w-5 text-center text-pink-500"></i>
+                <span>Lista de Desejos</span>
             </a>
         </nav>
 

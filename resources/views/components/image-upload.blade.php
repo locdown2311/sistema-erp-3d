@@ -1,5 +1,5 @@
 {{-- Image Upload Zone with Paste (Ctrl+V) and Crop --}}
-@props(['name' => 'image', 'currentImage' => null])
+@props(['name' => 'image', 'currentImage' => null, 'imageUrl' => null])
 
 <div class="mb-5 relative">
     <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Imagem</label>
@@ -8,13 +8,13 @@
     <div id="imageDropZone" class="border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-xl p-6 text-center cursor-pointer transition-colors bg-zinc-50 dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-900 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 relative"
          onclick="document.getElementById('imageFileInput').click()">
 
-        <div id="imagePreviewArea" class="{{ $currentImage ? 'block' : 'hidden' }}">
-            <img id="imagePreview" src="{{ $currentImage ? asset('storage/' . $currentImage) : '' }}"
+        <div id="imagePreviewArea" class="{{ $currentImage || $imageUrl ? 'block' : 'hidden' }}">
+            <img id="imagePreview" src="{{ $imageUrl ?: ($currentImage ? (str_starts_with($currentImage, 'http') ? $currentImage : asset('storage/' . $currentImage)) : '') }}"
                  class="max-w-full max-h-48 mx-auto rounded-lg mb-2 object-contain bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm">
             <div class="text-xs text-zinc-500 dark:text-zinc-400">Clique ou cole (Ctrl+V) para trocar</div>
         </div>
 
-        <div id="imagePlaceholder" class="{{ $currentImage ? 'hidden' : 'block' }}">
+        <div id="imagePlaceholder" class="{{ $currentImage || $imageUrl ? 'hidden' : 'block' }}">
             <i class="fas fa-cloud-upload-alt text-3xl text-zinc-400 dark:text-zinc-500 mb-2"></i>
             <div class="text-sm text-zinc-600 dark:text-zinc-400">Clique para selecionar, arraste ou <strong class="text-zinc-900 dark:text-white font-medium">cole (Ctrl+V)</strong></div>
             <div class="text-xs text-zinc-500 dark:text-zinc-500 mt-1">PNG, JPG, WEBP</div>

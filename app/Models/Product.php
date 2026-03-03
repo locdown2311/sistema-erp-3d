@@ -47,4 +47,20 @@ class Product extends Model
         $out = $this->stockMovements()->where('type', 'out')->sum('quantity');
         return $in - $out;
     }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        if (!$this->image_path) return null;
+        if (str_starts_with($this->image_path, 'http')) return $this->image_path;
+        return \Illuminate\Support\Facades\Storage::url($this->image_path);
+    }
+
+    public function getThumbnailUrlAttribute(): ?string
+    {
+        if (!$this->image_path) return null;
+        if (str_starts_with($this->image_path, 'https://pixeldrain.com/api/file/')) {
+            return $this->image_path . '/thumbnail';
+        }
+        return $this->image_url;
+    }
 }

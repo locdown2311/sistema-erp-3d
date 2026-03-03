@@ -43,7 +43,9 @@
             <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-700 transition-all flex flex-col group">
                 <div class="aspect-square bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center relative overflow-hidden">
                     @if($product->image_path)
-                        <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <img src="{{ $product->thumbnail_url }}" alt="{{ $product->name }}" 
+                             loading="lazy"
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 relative z-0">
                     @else
                         <i class="fas fa-cube text-4xl text-zinc-300 dark:text-zinc-600 group-hover:scale-110 transition-transform duration-300"></i>
                     @endif
@@ -100,8 +102,10 @@
         @endforeach
     </div>
 
-    {{-- Pagination placeholder --}}
-    <div class="mt-6"></div>
+    {{-- Pagination --}}
+    <div class="mt-6">
+        {{ $products->links() }}
+    </div>
 @else
     <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-12 text-center shadow-sm">
         <div class="w-16 h-16 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mx-auto mb-4 text-zinc-400 text-2xl">
@@ -114,4 +118,8 @@
         </a>
     </div>
 @endif
+@endsection
+
+@section('scripts')
+{{-- No scripts required here currently --}}
 @endsection

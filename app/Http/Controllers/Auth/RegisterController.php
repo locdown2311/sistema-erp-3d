@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Services\PixelDrainService;
 
 class RegisterController extends Controller
 {
@@ -28,24 +29,30 @@ class RegisterController extends Controller
             'store_description' => 'nullable|string|max:1000',
         ]);
 
-        // Handle store logo (base64 from crop or file upload)
-        $logoPath = null;
-        if ($request->filled('cropped_image')) {
-            $logoPath = $this->saveBase64Image($request->cropped_image);
-        } elseif ($request->hasFile('store_logo')) {
-            $logoPath = $request->file('store_logo')->store('logos', 'public');
-        }
+        $user = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $validated) {
+            // Handle store logo (base64 from crop or file upload)
+            $logoPath = null;
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => $validated['password'],
-            'store_name' => $validated['store_name'],
-            'slug' => $validated['slug'],
-            'whatsapp' => $validated['whatsapp'],
-            'store_description' => $validated['store_description'] ?? null,
-            'store_logo' => $logoPath,
-        ]);
+            if ($request->filled('cropped_image')) {
+                $data = explode(',', $request->cropped_image, 2);
+                $imageData = base64_decode($data[1] ?? $data[0]);
+                $logoPath = 'logos/tmp_' . uniqid() . '.jpg';
+                \Illuminate\Support\Facades\Storage::disk('public')->put($logoPath, $imageData);
+            } elseif ($request->hasFile('store_logo')) {
+                $logoPath = $request->file('store_logo')->store('logos', 'public');
+            }
+
+            return User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'store_name' => $validated['store_name'],
+                'slug' => $validated['slug'],
+                'whatsapp' => $validated['whatsapp'],
+                'store_description' => $validated['store_description'] ?? null,
+                'store_logo' => $logoPath,
+            ]);
+        });
 
         Auth::login($user);
 
@@ -53,18 +60,5 @@ class RegisterController extends Controller
             ->with('success', 'Bem-vindo! Sua loja foi criada com sucesso.');
     }
 
-    private function saveBase64Image(string $base64): string
-    {
-        $data = explode(',', $base64, 2);
-        $imageData = base64_decode($data[1] ?? $data[0]);
 
-        $ext = 'jpg';
-        if (isset($data[0]) && str_contains($data[0], 'png')) $ext = 'png';
-        elseif (isset($data[0]) && str_contains($data[0], 'webp')) $ext = 'webp';
-
-        $filename = 'logos/' . Str::random(40) . '.' . $ext;
-        Storage::disk('public')->put($filename, $imageData);
-
-        return $filename;
-    }
 }

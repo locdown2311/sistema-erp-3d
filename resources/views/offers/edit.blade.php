@@ -73,7 +73,7 @@
             <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Imagem</label>
             <div id="imageUploadArea" class="border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-xl p-6 text-center cursor-pointer transition-colors bg-zinc-50 dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-900 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 min-h-[160px] flex flex-col items-center justify-center">
                 @if($offer->image_path)
-                    <img src="{{ asset('storage/' . $offer->image_path) }}" class="max-w-full max-h-48 rounded-lg object-contain shadow-sm border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+                    <img src="{{ $offer->thumbnail_url }}" class="max-w-full max-h-48 rounded-lg object-contain shadow-sm border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
                 @else
                     <i class="fas fa-cloud-upload-alt text-3xl text-zinc-400 dark:text-zinc-500 mb-2"></i>
                     <p class="text-sm text-zinc-500 dark:text-zinc-400">Clique ou arraste uma imagem<br><span class="text-xs mt-1 block">ou <strong class="text-zinc-700 dark:text-zinc-300">cole (Ctrl+V)</strong></span></p>

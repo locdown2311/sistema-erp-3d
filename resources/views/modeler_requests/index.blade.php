@@ -65,10 +65,21 @@
 
                     @if($request->image_path)
                         <div class="mb-4">
-                            <a href="{{ asset('storage/' . $request->image_path) }}" target="_blank" class="block w-full h-32 rounded-xl bg-zinc-100 dark:bg-zinc-800 overflow-hidden relative group/img border border-zinc-200 dark:border-zinc-700">
-                                <img src="{{ asset('storage/' . $request->image_path) }}" class="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500" alt="Referência">
-                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
-                                    <span class="bg-white/20 backdrop-blur-md text-white backdrop-blur-md px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2">
+                            @php
+                                $isPending = str_starts_with($request->image_path, 'modeler_requests/pedido_');
+                            @endphp
+                            <a href="{{ $request->image_url }}" target="_blank" class="block w-full h-32 rounded-xl bg-zinc-100 dark:bg-zinc-800 overflow-hidden relative group/img border border-zinc-200 dark:border-zinc-700">
+                                <div class="absolute inset-0 bg-zinc-200 dark:bg-zinc-700 animate-pulse flex items-center justify-center transition-opacity duration-300 z-10" id="loader-{{ $request->id }}">
+                                    <i class="fas fa-spinner fa-spin text-zinc-400 dark:text-zinc-500 text-2xl"></i>
+                                </div>
+                                <img src="{{ $request->thumbnail_url }}" 
+                                     onload="document.getElementById('loader-{{ $request->id }}').classList.add('opacity-0'); setTimeout(() => document.getElementById('loader-{{ $request->id }}').remove(), 300)"
+                                     loading="lazy"
+                                     referrerpolicy="no-referrer"
+                                     class="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500 relative z-0" 
+                                     alt="Referência">
+                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity z-20 pointer-events-none">
+                                    <span class="bg-white/20 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2">
                                         <i class="fas fa-expand-arrows-alt"></i> Ver Anexo
                                     </span>
                                 </div>
