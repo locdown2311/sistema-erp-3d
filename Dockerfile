@@ -25,7 +25,7 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Instala extensões do PHP necessárias para o Laravel
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip pdo_sqlite
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip pdo_sqlite soap
 RUN pecl install redis && docker-php-ext-enable redis
 
 # Aumenta os limites de envio de arquivos e memória do PHP para 50MB
