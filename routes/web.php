@@ -109,6 +109,7 @@ Route::middleware('auth')->group(function () {
     // Gerador Flexi
     Route::get('flexi-generator', [FlexiGeneratorController::class, 'index'])->name('flexi-generator.index');
     Route::post('flexi-generator/upload', [FlexiGeneratorController::class, 'upload'])->name('flexi-generator.upload');
+    Route::post('flexi-generator/track-usage', [FlexiGeneratorController::class, 'trackUsage'])->name('flexi-generator.track-usage');
 
     // Plans & Subscriptions
     Route::get('plans', [PlanController::class, 'index'])->name('plans.index');
