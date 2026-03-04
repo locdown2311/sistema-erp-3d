@@ -8,7 +8,7 @@ class Plan extends Model
 {
     protected $fillable = [
         'name', 'slug', 'price', 'max_products', 'max_sales_per_month',
-        'max_wishlists', 'features', 'is_active', 'mp_plan_id',
+        'max_wishlists', 'max_flexi_cuts', 'features', 'is_active', 'mp_plan_id',
         'can_export_reports', 'can_use_nfe', 'priority_store', 'can_customize_store',
     ];
 

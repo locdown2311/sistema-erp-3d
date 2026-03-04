@@ -14,7 +14,7 @@ class User extends Authenticatable
         'name', 'email', 'password',
         'slug', 'store_name', 'store_logo', 'whatsapp', 'store_description',
         'store_color_primary', 'store_color_accent', 'store_color_bg',
-        'suspended_at', 'suspension_reason',
+        'suspended_at', 'suspension_reason', 'flexi_cuts_count',
     ];
 
     protected $hidden = [
@@ -73,6 +73,7 @@ class User extends Authenticatable
             'products' => $plan->limitReached('max_products', $this->products()->count()),
             'sales' => $plan->limitReached('max_sales_per_month', $this->salesThisMonth()),
             'wishlists' => $plan->limitReached('max_wishlists', $this->wishlists()->count()),
+            'flexi_cuts' => $plan->limitReached('max_flexi_cuts', $this->flexi_cuts_count),
             default => false,
         };
     }
@@ -98,6 +99,10 @@ class User extends Authenticatable
             'wishlists' => [
                 'current' => $this->wishlists()->count(),
                 'limit' => $plan->max_wishlists,
+            ],
+            'flexi_cuts' => [
+                'current' => $this->flexi_cuts_count,
+                'limit' => $plan->max_flexi_cuts,
             ],
             default => ['current' => 0, 'limit' => null],
         };

@@ -8,7 +8,32 @@ class FlexiGeneratorController extends Controller
 {
     public function index()
     {
-        return view('flexi-generator.index');
+        $user = auth()->user();
+        $usage = $user->getPlanUsage('flexi_cuts');
+        
+        return view('flexi-generator.index', [
+            'flexi_current' => $usage['current'],
+            'flexi_limit' => $usage['limit'],
+        ]);
+    }
+
+    public function trackUsage(Request $request)
+    {
+        $user = auth()->user();
+
+        if ($user->planLimitReached('flexi_cuts')) {
+            return response()->json([
+                'allowed' => false,
+                'message' => 'Você atingiu o limite de cortes do seu plano gratuito. Faça upgrade para continuar utilizando o gerador!',
+            ]);
+        }
+
+        // Increment usage
+        $user->increment('flexi_cuts_count');
+
+        return response()->json([
+            'allowed' => true,
+        ]);
     }
 
     public function upload(Request $request)
