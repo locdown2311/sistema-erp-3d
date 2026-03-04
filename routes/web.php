@@ -108,8 +108,8 @@ Route::middleware('auth')->group(function () {
     // Plans & Subscriptions
     Route::get('plans', [PlanController::class, 'index'])->name('plans.index');
     Route::post('subscriptions', [SubscriptionController::class, 'store'])->name('subscriptions.store');
-    Route::get('subscriptions/callback', [SubscriptionController::class, 'callback'])->name('subscriptions.callback');
+    Route::get('subscriptions/success', [SubscriptionController::class, 'success'])->name('subscriptions.success');
 });
 
-// Webhook do Mercado Pago (sem autenticação)
-Route::post('webhooks/mercadopago', [SubscriptionController::class, 'webhook'])->name('subscriptions.webhook');
+// Webhook do Stripe (sem autenticação)
+Route::post('webhooks/stripe', [SubscriptionController::class, 'webhook'])->name('subscriptions.webhook');

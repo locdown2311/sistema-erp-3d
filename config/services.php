@@ -39,9 +39,10 @@ return [
         'key' => env('PIXELDRAIN_API_KEY'),
     ],
 
-    'mercadopago' => [
-        'access_token' => env('MP_ACCESS_TOKEN'),
-        'public_key' => env('MP_PUBLIC_KEY'),
+    'stripe' => [
+        'secret' => env('STRIPE_SECRET_KEY'),
+        'public' => env('STRIPE_PUBLIC_KEY'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
 ];

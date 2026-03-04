@@ -67,8 +67,13 @@ RUN mkdir -p /var/www/html/storage/app/public
 
 EXPOSE 80
 
-# Cria pasta para os logs do supervisor
+# Cria pasta para os logs do supervisor e instala cron
 RUN mkdir -p /var/log/supervisor
+RUN apt-get update && apt-get install -y cron && rm -rf /var/lib/apt/lists/*
+
+# Adiciona cron do Laravel scheduler
+RUN echo "* * * * * www-data cd /var/www/html && php artisan schedule:run >> /var/www/html/storage/logs/scheduler.log 2>&1" > /etc/cron.d/laravel-scheduler
+RUN chmod 0644 /etc/cron.d/laravel-scheduler
 
 # Configura o Supervisor para rodar o Apache e o Worker do Laravel
 COPY <<-"EOF" /etc/supervisor/conf.d/supervisord.conf
@@ -99,6 +104,15 @@ numprocs=1
 redirect_stderr=true
 stdout_logfile=/var/www/html/storage/logs/worker.log
 stopwaitsecs=3600
+
+[program:cron]
+command=/usr/sbin/cron -f
+autostart=true
+autorestart=true
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
 EOF
 
 # Script de entrypoint modificado para inicializar o Supervisor

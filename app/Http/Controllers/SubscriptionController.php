@@ -6,8 +6,6 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use MercadoPago\Client\Preference\PreferenceClient;
-use MercadoPago\MercadoPagoConfig;
 
 class SubscriptionController extends Controller
 {
@@ -34,179 +32,171 @@ class SubscriptionController extends Controller
                 ->with('success', "Plano {$plan->name} ativado com sucesso!");
         }
 
-        // Plano pago — Checkout Pro do Mercado Pago
-        $accessToken = config('services.mercadopago.access_token');
-        if (!$accessToken) {
+        // Plano pago — Stripe Checkout
+        $stripeKey = config('services.stripe.secret');
+        if (!$stripeKey) {
             return redirect()->route('plans.index')
                 ->with('error', 'Pagamento não configurado. Entre em contato com o suporte.');
         }
 
         try {
-            MercadoPagoConfig::setAccessToken($accessToken);
+            \Stripe\Stripe::setApiKey($stripeKey);
 
-            $client = new PreferenceClient();
-            $preference = $client->create([
-                'items' => [
-                    [
-                        'id' => "plan_{$plan->id}",
-                        'title' => "Plano {$plan->name} - CENTRAL 3D",
-                        'description' => "Assinatura mensal do plano {$plan->name}",
-                        'quantity' => 1,
-                        'unit_price' => (float) $plan->price,
-                        'currency_id' => 'BRL',
-                    ]
-                ],
-                'payer' => [
-                    'email' => $user->email,
-                    'name' => $user->name,
-                ],
-                'back_urls' => [
-                    'success' => route('subscriptions.callback'),
-                    'failure' => route('subscriptions.callback'),
-                    'pending' => route('subscriptions.callback'),
-                ],
-                'auto_return' => 'approved',
-                'external_reference' => json_encode([
+            $session = \Stripe\Checkout\Session::create([
+                'payment_method_types' => ['card'],
+                'mode' => 'payment',
+                'line_items' => [[
+                    'price_data' => [
+                        'currency' => 'brl',
+                        'product_data' => [
+                            'name' => "Plano {$plan->name} - Central 3D",
+                            'description' => "Assinatura mensal do plano {$plan->name}",
+                        ],
+                        'unit_amount' => (int) ($plan->price * 100), // Stripe usa centavos
+                    ],
+                    'quantity' => 1,
+                ]],
+                'customer_email' => $user->email,
+                'metadata' => [
                     'user_id' => $user->id,
                     'plan_id' => $plan->id,
-                ]),
-                'notification_url' => route('subscriptions.webhook'),
-                'statement_descriptor' => 'CENTRAL3D',
+                ],
+                'success_url' => route('subscriptions.success') . '?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => route('plans.index'),
             ]);
 
-            return redirect($preference->init_point);
-        } catch (\MercadoPago\Exceptions\MPApiException $e) {
-            Log::error('Mercado Pago API error', [
-                'status' => $e->getStatusCode(),
-                'response' => $e->getApiResponse()?->getContent(),
-                'message' => $e->getMessage(),
-            ]);
-            return redirect()->route('plans.index')
-                ->with('error', 'Erro ao criar pagamento no Mercado Pago. Verifique os logs.');
+            return redirect($session->url);
         } catch (\Exception $e) {
-            Log::error('Mercado Pago error: ' . $e->getMessage());
+            Log::error('Stripe error', [
+                'message' => $e->getMessage(),
+                'code' => $e->getCode(),
+            ]);
             return redirect()->route('plans.index')
-                ->with('error', 'Erro ao conectar com o Mercado Pago. Tente novamente.');
+                ->with('error', 'Erro ao conectar com o Stripe. Tente novamente.');
         }
     }
 
     /**
-     * Callback de retorno do Mercado Pago (back_url)
+     * Callback de sucesso do Stripe
      */
-    public function callback(Request $request)
+    public function success(Request $request)
     {
-        $status = $request->query('status', $request->query('collection_status'));
-        $paymentId = $request->query('payment_id', $request->query('collection_id'));
-        $externalRef = $request->query('external_reference');
-
-        if ($status === 'approved' && $externalRef) {
-            $ref = json_decode($externalRef, true);
-            $userId = $ref['user_id'] ?? null;
-            $planId = $ref['plan_id'] ?? null;
-
-            if ($userId && $planId && $userId == auth()->id()) {
-                $plan = Plan::find($planId);
-                if ($plan) {
-                    $user = auth()->user();
-
-                    // Verificar se já não foi ativado (evitar duplicata)
-                    $existing = $user->subscriptions()
-                        ->where('mp_payment_id', $paymentId)
-                        ->where('status', 'active')
-                        ->first();
-
-                    if (!$existing) {
-                        $user->subscriptions()->where('status', 'active')
-                            ->update(['status' => 'canceled', 'ends_at' => now()]);
-
-                        $user->subscriptions()->create([
-                            'plan_id' => $plan->id,
-                            'status' => 'active',
-                            'starts_at' => now(),
-                            'ends_at' => now()->addMonth(),
-                            'mp_payment_id' => $paymentId,
-                            'mp_status' => 'approved',
-                        ]);
-                    }
-
-                    return redirect()->route('plans.index')
-                        ->with('success', "Pagamento aprovado! Plano {$plan->name} ativado com sucesso! 🎉");
-                }
-            }
-        }
-
-        if ($status === 'pending') {
-            return redirect()->route('plans.index')
-                ->with('warning', 'Seu pagamento está pendente de aprovação. O plano será ativado automaticamente após a confirmação.');
-        }
-
-        return redirect()->route('plans.index')
-            ->with('error', 'O pagamento não foi aprovado. Tente novamente.');
-    }
-
-    /**
-     * Webhook do Mercado Pago (notification_url)
-     */
-    public function webhook(Request $request)
-    {
-        Log::info('MP Webhook recebido', $request->all());
-
-        if ($request->type !== 'payment' || !$request->has('data.id')) {
-            return response()->json(['status' => 'ignored'], 200);
+        $sessionId = $request->query('session_id');
+        if (!$sessionId) {
+            return redirect()->route('plans.index')->with('error', 'Sessão de pagamento inválida.');
         }
 
         try {
-            $accessToken = config('services.mercadopago.access_token');
-            MercadoPagoConfig::setAccessToken($accessToken);
+            \Stripe\Stripe::setApiKey(config('services.stripe.secret'));
+            $session = \Stripe\Checkout\Session::retrieve($sessionId);
 
-            $paymentClient = new \MercadoPago\Client\Payment\PaymentClient();
-            $payment = $paymentClient->get((int) $request->input('data.id'));
-
-            if (!$payment || !$payment->external_reference) {
-                return response()->json(['status' => 'no_ref'], 200);
+            if ($session->payment_status !== 'paid') {
+                return redirect()->route('plans.index')
+                    ->with('error', 'O pagamento não foi confirmado. Tente novamente.');
             }
 
-            $ref = json_decode($payment->external_reference, true);
-            $userId = $ref['user_id'] ?? null;
-            $planId = $ref['plan_id'] ?? null;
+            $userId = $session->metadata->user_id;
+            $planId = $session->metadata->plan_id;
+            $user = auth()->user();
 
-            if (!$userId || !$planId) {
-                return response()->json(['status' => 'invalid_ref'], 200);
+            // Verificar que o pagamento é do mesmo usuário logado
+            if (!$user || $user->id != $userId) {
+                return redirect()->route('plans.index')
+                    ->with('error', 'Sessão de pagamento não corresponde ao usuário.');
             }
 
-            $user = \App\Models\User::find($userId);
             $plan = Plan::find($planId);
-
-            if (!$user || !$plan) {
-                return response()->json(['status' => 'not_found'], 200);
+            if (!$plan) {
+                return redirect()->route('plans.index')
+                    ->with('error', 'Plano não encontrado.');
             }
 
-            if ($payment->status === 'approved') {
-                // Evitar duplicatas
-                $existing = $user->subscriptions()
-                    ->where('mp_payment_id', (string) $payment->id)
-                    ->where('status', 'active')
-                    ->first();
+            // Evitar duplicatas
+            $existing = $user->subscriptions()
+                ->where('mp_payment_id', $session->payment_intent)
+                ->where('status', 'active')
+                ->first();
 
-                if (!$existing) {
-                    $user->subscriptions()->where('status', 'active')
-                        ->update(['status' => 'canceled', 'ends_at' => now()]);
+            if (!$existing) {
+                $user->subscriptions()->where('status', 'active')
+                    ->update(['status' => 'canceled', 'ends_at' => now()]);
 
-                    $user->subscriptions()->create([
-                        'plan_id' => $plan->id,
-                        'status' => 'active',
-                        'starts_at' => now(),
-                        'ends_at' => now()->addMonth(),
-                        'mp_payment_id' => (string) $payment->id,
-                        'mp_status' => 'approved',
-                    ]);
+                $user->subscriptions()->create([
+                    'plan_id' => $plan->id,
+                    'status' => 'active',
+                    'starts_at' => now(),
+                    'ends_at' => now()->addMonth(),
+                    'mp_payment_id' => $session->payment_intent,
+                    'mp_status' => 'paid',
+                ]);
+            }
+
+            return redirect()->route('plans.index')
+                ->with('success', "Pagamento aprovado! Plano {$plan->name} ativado com sucesso! 🎉");
+        } catch (\Exception $e) {
+            Log::error('Stripe success callback error', ['message' => $e->getMessage()]);
+            return redirect()->route('plans.index')
+                ->with('error', 'Erro ao verificar pagamento. Entre em contato com o suporte.');
+        }
+    }
+
+    /**
+     * Webhook do Stripe
+     */
+    public function webhook(Request $request)
+    {
+        $payload = $request->getContent();
+        $sigHeader = $request->header('Stripe-Signature');
+        $webhookSecret = config('services.stripe.webhook_secret');
+
+        try {
+            if ($webhookSecret) {
+                $event = \Stripe\Webhook::constructEvent($payload, $sigHeader, $webhookSecret);
+            } else {
+                $event = json_decode($payload);
+            }
+        } catch (\Exception $e) {
+            Log::error('Stripe webhook signature error', ['message' => $e->getMessage()]);
+            return response('Invalid signature', 400);
+        }
+
+        $type = is_object($event) ? ($event->type ?? null) : null;
+
+        if ($type === 'checkout.session.completed') {
+            $session = $event->data->object;
+
+            if ($session->payment_status === 'paid') {
+                $userId = $session->metadata->user_id ?? null;
+                $planId = $session->metadata->plan_id ?? null;
+
+                if ($userId && $planId) {
+                    $user = \App\Models\User::find($userId);
+                    $plan = Plan::find($planId);
+
+                    if ($user && $plan) {
+                        $existing = $user->subscriptions()
+                            ->where('mp_payment_id', $session->payment_intent)
+                            ->where('status', 'active')
+                            ->first();
+
+                        if (!$existing) {
+                            $user->subscriptions()->where('status', 'active')
+                                ->update(['status' => 'canceled', 'ends_at' => now()]);
+
+                            $user->subscriptions()->create([
+                                'plan_id' => $plan->id,
+                                'status' => 'active',
+                                'starts_at' => now(),
+                                'ends_at' => now()->addMonth(),
+                                'mp_payment_id' => $session->payment_intent,
+                                'mp_status' => 'paid',
+                            ]);
+                        }
+                    }
                 }
             }
-
-            return response()->json(['status' => 'ok'], 200);
-        } catch (\Exception $e) {
-            Log::error('MP Webhook error: ' . $e->getMessage());
-            return response()->json(['status' => 'error'], 500);
         }
+
+        return response('OK', 200);
     }
 }

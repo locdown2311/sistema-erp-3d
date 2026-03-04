@@ -12,3 +12,6 @@ Artisan::command('inspire', function () {
 Schedule::call(function () {
     ModelerRequest::where('created_at', '<', now()->subDays(7))->delete();
 })->daily();
+
+// Expirar assinaturas vencidas e rebaixar para o plano gratuito
+Schedule::command('subscriptions:expire')->daily();
