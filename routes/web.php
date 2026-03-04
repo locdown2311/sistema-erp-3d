@@ -19,6 +19,7 @@ use App\Http\Controllers\PlanController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\FlexiGeneratorController;
 
 // Public Landing Page (Marketplace Hub)
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -104,6 +105,10 @@ Route::middleware('auth')->group(function () {
     // Wishlists (User specific)
     Route::post('wishlists/refresh-all', [WishlistController::class, 'refreshAll'])->name('wishlists.refresh-all');
     Route::resource('wishlists', WishlistController::class)->only(['index', 'store', 'destroy']);
+
+    // Gerador Flexi
+    Route::get('flexi-generator', [FlexiGeneratorController::class, 'index'])->name('flexi-generator.index');
+    Route::post('flexi-generator/upload', [FlexiGeneratorController::class, 'upload'])->name('flexi-generator.upload');
 
     // Plans & Subscriptions
     Route::get('plans', [PlanController::class, 'index'])->name('plans.index');

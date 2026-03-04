@@ -75,6 +75,10 @@
                 <i class="fas fa-calculator w-5 text-center"></i>
                 <span>Custos 3D</span>
             </a>
+            <a href="{{ route('flexi-generator.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white {{ request()->routeIs('flexi-generator.*') ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium' : '' }}">
+                <i class="fas fa-bezier-curve w-5 text-center"></i>
+                <span>Gerador Flexi</span>
+            </a>
             <a href="{{ route('nfe.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white {{ request()->routeIs('nfe.*') ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium' : '' }}">
                 <i class="fas fa-file-invoice w-5 text-center"></i>
                 <span>Notas Fiscais</span>
