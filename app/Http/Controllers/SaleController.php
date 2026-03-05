@@ -7,6 +7,7 @@ use App\Models\SaleItem;
 use App\Models\Product;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class SaleController extends Controller
 {
@@ -25,7 +26,68 @@ class SaleController extends Controller
         }
 
         $sales = $query->orderBy('sale_date', 'desc')->paginate(15);
-        return view('sales.index', compact('sales'));
+        $canExportReports = auth()->user()->currentPlan()?->can_export_reports ?? false;
+        
+        return view('sales.index', compact('sales', 'canExportReports'));
+    }
+
+    public function reportPdf(Request $request)
+    {
+        if (!(auth()->user()->currentPlan()?->can_export_reports ?? false)) {
+            abort(403, 'A exportação de relatórios em PDF requer um plano Premium (Basic ou Pro).');
+        }
+
+        $query = Sale::where('user_id', auth()->id())->with('items.product');
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('date_from')) {
+            $query->where('sale_date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->where('sale_date', '<=', $request->date_to);
+        }
+
+        $sales = $query->orderBy('sale_date', 'desc')->get();
+        $filters = $request->only(['status', 'date_from', 'date_to']);
+
+        // ── KPIs ──────────────────────────────────────────────
+        $totalSum       = $sales->sum('total');
+        $totalCompleted = $sales->where('status', 'completed')->sum('total');
+        $totalPending   = $sales->where('status', 'pending')->sum('total');
+        $totalCancelled = $sales->where('status', 'cancelled')->sum('total');
+        $countCompleted = $sales->where('status', 'completed')->count();
+        $countPending   = $sales->where('status', 'pending')->count();
+        $countCancelled = $sales->where('status', 'cancelled')->count();
+        $totalItems     = $sales->sum(fn($s) => $s->items->sum('quantity'));
+        $avgTicket      = $sales->count() > 0 ? $totalSum / $sales->count() : 0;
+
+        // ── Top 5 produtos vendidos ───────────────────────────
+        $productRanking = $sales->flatMap(fn($s) => $s->items)
+            ->groupBy(fn($item) => $item->product->name ?? 'Removido')
+            ->map(fn($group) => [
+                'qty'   => $group->sum('quantity'),
+                'total' => $group->sum(fn($i) => $i->quantity * $i->unit_price),
+            ])
+            ->sortByDesc('total')
+            ->take(5);
+
+        // ── Dados da empresa ──────────────────────────────────
+        $user      = auth()->user();
+        $storeName = $user->store_name ?? $user->name;
+        $logoUrl   = $user->store_logo_url;
+
+        $pdf = Pdf::loadView('reports.sales_pdf', compact(
+            'sales', 'filters', 'storeName', 'logoUrl',
+            'totalSum', 'totalCompleted', 'totalPending', 'totalCancelled',
+            'countCompleted', 'countPending', 'countCancelled',
+            'totalItems', 'avgTicket', 'productRanking'
+        ));
+
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->stream('relatorio_vendas.pdf');
     }
 
     public function create()
@@ -100,5 +162,23 @@ class SaleController extends Controller
         $sale->delete();
         return redirect()->route('sales.index')
             ->with('success', 'Venda removida com sucesso!');
+    }
+
+    public function updateTracking(Request $request, Sale $sale)
+    {
+        if ($sale->user_id !== auth()->id()) abort(403);
+
+        $validated = $request->validate([
+            'tracking_code' => 'nullable|string|max:255',
+            'shipping_status' => 'nullable|string|in:Pendente,Em Trânsito,Entregue,Devolvido',
+        ]);
+
+        $sale->update([
+            'tracking_code' => $validated['tracking_code'],
+            'shipping_status' => $validated['shipping_status'],
+        ]);
+
+        return redirect()->route('sales.show', $sale)
+            ->with('success', 'Informações de rastreamento atualizadas com sucesso!');
     }
 }

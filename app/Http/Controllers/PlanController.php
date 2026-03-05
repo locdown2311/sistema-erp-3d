@@ -17,6 +17,7 @@ class PlanController extends Controller
             'products' => $user->getPlanUsage('products'),
             'sales' => $user->getPlanUsage('sales'),
             'wishlists' => $user->getPlanUsage('wishlists'),
+            'flexi_cuts' => $user->getPlanUsage('flexi_cuts'),
         ];
 
         return view('plans.index', compact('plans', 'currentPlan', 'usage'));

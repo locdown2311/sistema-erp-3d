@@ -3,6 +3,18 @@
 @section('page-title', 'Vendas')
 
 @section('top-actions')
+    @if(isset($canExportReports) && $canExportReports)
+        <a href="{{ route('sales.report.pdf', request()->query()) }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-white text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-sm font-medium rounded-lg transition-colors">
+            <i class="fas fa-file-pdf text-red-500"></i> Relatório PDF
+        </a>
+    @else
+        <button onclick="Swal.fire({icon: 'warning', title: 'Recurso Premium', text: 'A exportação de relatórios em PDF é exclusiva dos planos Basic e Pro. Faça upgrade para utilizar!', confirmButtonText: 'Ver Planos', confirmButtonColor: '#6366f1'}).then((result) => { if(result.isConfirmed) window.location.href = '{{ route('plans.index') }}' })" class="inline-flex items-center gap-2 px-4 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm font-medium rounded-lg text-zinc-400 dark:text-zinc-500 cursor-pointer overflow-hidden group relative transition-all">
+            <i class="fas fa-file-pdf"></i> Relatório PDF
+            <div class="absolute inset-0 bg-zinc-900/10 dark:bg-black/40 backdrop-blur-[1px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <span class="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg"><i class="fas fa-lock mr-0.5"></i> PRO</span>
+            </div>
+        </button>
+    @endif
     <a href="{{ route('sales.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 text-sm font-medium rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors">
         <i class="fas fa-plus"></i> Nova Venda
     </a>

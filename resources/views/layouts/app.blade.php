@@ -75,14 +75,34 @@
                 <i class="fas fa-calculator w-5 text-center"></i>
                 <span>Custos 3D</span>
             </a>
-            <a href="{{ route('flexi-generator.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white {{ request()->routeIs('flexi-generator.*') ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium' : '' }}">
-                <i class="fas fa-bezier-curve w-5 text-center"></i>
-                <span>Gerador Flexi</span>
+            <a href="{{ route('flexi-generator.index') }}" class="group relative flex items-center justify-between px-3 py-2.5 rounded-md overflow-hidden transition-all duration-300 {{ request()->routeIs('flexi-generator.*') ? 'bg-indigo-50 dark:bg-indigo-500/10' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800' }}">
+                <div class="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-l-md opacity-0 group-hover:opacity-100 transition-opacity {{ request()->routeIs('flexi-generator.*') ? 'opacity-100' : '' }}"></div>
+                <div class="flex items-center gap-3 relative z-10">
+                    <i class="fas fa-cube w-5 text-center transition-transform group-hover:scale-110 {{ request()->routeIs('flexi-generator.*') ? 'text-indigo-500' : 'text-zinc-600 dark:text-zinc-400 group-hover:text-indigo-500' }}"></i>
+                    <span class="font-semibold {{ request()->routeIs('flexi-generator.*') ? 'text-indigo-600 dark:text-indigo-400' : 'text-zinc-600 dark:text-zinc-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400' }}">Gerador Flexi</span>
+                </div>
+                <span class="bg-indigo-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full relative z-10 flex items-center gap-1">
+                    NOVO
+                    <span class="relative flex h-1.5 w-1.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-200 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-indigo-100"></span>
+                    </span>
+                </span>
             </a>
-            <a href="{{ route('nfe.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white {{ request()->routeIs('nfe.*') ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium' : '' }}">
-                <i class="fas fa-file-invoice w-5 text-center"></i>
-                <span>Notas Fiscais</span>
-            </a>
+            @if(auth()->user()->currentPlan()?->can_use_nfe ?? false)
+                <a href="{{ route('nfe.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white {{ request()->routeIs('nfe.*') ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium' : '' }}">
+                    <i class="fas fa-file-invoice w-5 text-center"></i>
+                    <span>Notas Fiscais</span>
+                </a>
+            @else
+                <button type="button" onclick="Swal.fire({icon: 'warning', title: 'Recurso Premium', text: 'A emissão de Notas Fiscais (NF-e) é exclusiva dos planos que suportam este recurso. Faça upgrade!', confirmButtonText: 'Ver Planos', confirmButtonColor: '#6366f1'}).then((result) => { if(result.isConfirmed) window.location.href = '{{ route('plans.index') }}' })" class="w-full flex items-center justify-between px-3 py-2.5 rounded-md text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors group">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-file-invoice w-5 text-center"></i>
+                        <span>Notas Fiscais</span>
+                    </div>
+                    <span class="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm opacity-80 group-hover:opacity-100"><i class="fas fa-lock text-[8px] mr-0.5"></i> PRO</span>
+                </button>
+            @endif
             <a href="{{ route('calendar.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white {{ request()->routeIs('calendar.*') ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium' : '' }}">
                 <i class="fas fa-calendar-alt w-5 text-center"></i>
                 <span>Calendário</span>

@@ -7,6 +7,7 @@ use NFePHP\NFe\Make;
 use NFePHP\NFe\Tools;
 use NFePHP\Common\Certificate;
 use NFePHP\NFe\Common\Standardize;
+use NFePHP\NFe\Complements;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Storage;
 use stdClass;
@@ -15,120 +16,185 @@ class NFeController extends Controller
 {
     public function index()
     {
+        if (!(auth()->user()->currentPlan()?->can_use_nfe ?? false)) {
+            abort(403, 'A emissão de Notas Fiscais (NF-e) requer um plano com suporte a este recurso.');
+        }
+
         $products = auth()->user()->products()->orderBy('name')->where('active', true)->get();
-        $emit_nome = Setting::get('nfe_emit_nome', 'EMPRESA DE IMPRESSÃO 3D LTDA');
-        $emit_cnpj = Setting::get('nfe_emit_cnpj', '01234567890123');
-        $emit_ie = Setting::get('nfe_emit_ie', '111111111111');
-        
+        $emit_nome = Setting::get('nfe_emit_nome');
+        $emit_cnpj = Setting::get('nfe_emit_cnpj');
+        $emit_ie   = Setting::get('nfe_emit_ie');
+
         return view('nfe.index', compact('products', 'emit_nome', 'emit_cnpj', 'emit_ie'));
     }
 
-    private function getToolsConfig()
+    /**
+     * Monta a configuração JSON exigida pelo NFePHP Tools.
+     * Todos os valores vêm das Settings do usuário.
+     */
+    private function getToolsConfig(): string
     {
-        $ambiente = Setting::get('nfe_ambiente', 2);
-        $uf = Setting::get('nfe_uf', 'SP');
-        $cnpj = Setting::where('key', 'emit_cnpj')->first() ? preg_replace('/[^0-9]/', '', Setting::get('emit_cnpj')) : '01234567890123';
-        
         $config = [
-            "atualizacao" => date('Y-m-d H:i:s'),
-            "tpAmb" => (int)$ambiente,
-            "razaosocial" => Setting::get('company_name', 'Minha Empresa 3D'),
-            "siglaUF" => strtoupper($uf),
-            "cnpj" => $cnpj,
-            "schemes" => "PL_009_V4",
-            "versao" => "4.00",
+            'atualizacao' => date('Y-m-d H:i:s'),
+            'tpAmb'       => (int) Setting::get('nfe_ambiente', 2),
+            'razaosocial'  => Setting::get('nfe_emit_nome', ''),
+            'siglaUF'      => strtoupper(Setting::get('nfe_uf', 'SP')),
+            'cnpj'         => preg_replace('/[^0-9]/', '', Setting::get('nfe_emit_cnpj', '')),
+            'schemes'      => 'PL_009_V4',
+            'versao'       => '4.00',
         ];
 
         return json_encode($config);
     }
 
+    /**
+     * Retorna o código numérico da UF (IBGE) a partir da sigla.
+     */
+    private function ufCode(string $uf): int
+    {
+        $map = [
+            'AC' => 12, 'AL' => 27, 'AM' => 13, 'AP' => 16, 'BA' => 29,
+            'CE' => 23, 'DF' => 53, 'ES' => 32, 'GO' => 52, 'MA' => 21,
+            'MG' => 31, 'MS' => 50, 'MT' => 51, 'PA' => 15, 'PB' => 25,
+            'PE' => 26, 'PI' => 22, 'PR' => 41, 'RJ' => 33, 'RN' => 24,
+            'RO' => 11, 'RR' => 14, 'RS' => 43, 'SC' => 42, 'SE' => 28,
+            'SP' => 35, 'TO' => 17,
+        ];
+
+        return $map[strtoupper($uf)] ?? 35;
+    }
+
+    /**
+     * Emissão da NF-e: monta XML, assina, envia via sefazEnviaLote e
+     * consulta o recibo para retornar o protocolo de autorização.
+     */
     public function emit(Request $request)
     {
+        if (!(auth()->user()->currentPlan()?->can_use_nfe ?? false)) {
+            return response()->json(['error' => 'A emissão de Notas Fiscais (NF-e) requer um plano com suporte a este recurso.'], 403);
+        }
+
+        // ── Validação dos dados do formulário ──────────────────────
         $validated = $request->validate([
-            'emit_nome' => 'required|string',
-            'emit_cnpj' => 'required|string',
-            'emit_ie' => 'required|string',
-            'dest_nome' => 'required|string',
-            'dest_cpf' => 'required|string',
-            'dest_cep' => 'required|string|size:9',
-            'dest_logradouro' => 'required|string',
-            'dest_numero' => 'required|string',
-            'dest_bairro' => 'required|string',
-            'dest_municipio' => 'required|string',
-            'dest_uf' => 'required|string|size:2',
-            'prod_descricao' => 'required|array|min:1',
-            'prod_ncm' => 'required|array',
-            'prod_cfop' => 'required|array',
-            'prod_qtd' => 'required|array',
-            'prod_vlr_unit' => 'required|array',
-            'prod_vlr_total' => 'required|array',
-            'prod_descricao.*' => 'required|string',
-            'prod_qtd.*' => 'required|numeric',
-            'prod_vlr_unit.*' => 'required|numeric',
-            'prod_vlr_total.*' => 'required|numeric',
+            'emit_nome'          => 'required|string',
+            'emit_cnpj'          => 'required|string',
+            'emit_ie'            => 'required|string',
+            'dest_nome'          => 'required|string',
+            'dest_cpf'           => 'required|string',
+            'dest_cep'           => 'required|string|size:9',
+            'dest_logradouro'    => 'required|string',
+            'dest_numero'        => 'required|string',
+            'dest_bairro'        => 'required|string',
+            'dest_municipio'     => 'required|string',
+            'dest_uf'            => 'required|string|size:2',
+            'dest_ie'            => 'nullable|string|max:20',
+            'dest_cmun'          => 'nullable|string',
+            'prod_descricao'     => 'required|array|min:1',
+            'prod_ncm'           => 'required|array',
+            'prod_cfop'          => 'required|array',
+            'prod_qtd'           => 'required|array',
+            'prod_vlr_unit'      => 'required|array',
+            'prod_vlr_total'     => 'required|array',
+            'prod_descricao.*'   => 'required|string',
+            'prod_qtd.*'         => 'required|numeric',
+            'prod_vlr_unit.*'    => 'required|numeric',
+            'prod_vlr_total.*'   => 'required|numeric',
         ]);
 
+        // ── Carregar configurações do emitente via Settings ────────
+        $emitUf      = strtoupper(Setting::get('nfe_uf', 'SP'));
+        $emitCuf     = $this->ufCode($emitUf);
+        $emitCMun    = (int) Setting::get('nfe_emit_cmun', 3550308);
+        $tpAmb       = (int) Setting::get('nfe_ambiente', 2);
+        $serie       = (int) Setting::get('nfe_serie', 1);
+        $proximaNNF  = (int) Setting::get('nfe_proxima_nnf', 1);
+
+        // ── Certificado digital ───────────────────────────────────
+        $certificadoPath  = Setting::get('nfe_certificado_path');
+        $certificadoSenha = Setting::get('nfe_certificado_senha')
+            ? decrypt(Setting::get('nfe_certificado_senha'))
+            : '';
+
+        $temCertificado = $certificadoPath && Storage::disk('local')->exists($certificadoPath);
+        $tools          = null;
+
+        if ($temCertificado) {
+            $pfxContent  = Storage::disk('local')->get($certificadoPath);
+            $certificate = Certificate::readPfx($pfxContent, $certificadoSenha);
+            $tools       = new Tools($this->getToolsConfig(), $certificate);
+        } elseif ($tpAmb === 1) {
+            // Em produção o certificado é obrigatório
+            return response()->json([
+                'error' => 'Certificado digital A1 não configurado. Vá em Configurações e faça o upload do seu certificado .pfx.',
+            ], 422);
+        }
+
+        // ── Montagem do XML ───────────────────────────────────────
         $nfe = new Make();
-        
+
         // infNFe
         $std = new stdClass();
-        $std->versao = '4.00';
-        $std->Id = '';
+        $std->versao   = '4.00';
+        $std->Id       = '';
         $std->pk_nItem = null;
         $nfe->taginfNFe($std);
-        
-        // ide
+
+        // ide (dados da nota)
+        $cNF = str_pad(random_int(10000000, 99999999), 8, '0', STR_PAD_LEFT);
+
         $std = new stdClass();
-        $std->cUF = 35; // SP
-        $std->cNF = '80080004';
-        $std->natOp = 'VENDA DE PRODUTO';
-        $std->mod = 55;
-        $std->serie = 1;
-        $std->nNF = 2;
-        $std->dhEmi = date("Y-m-d\TH:i:sP");
-        $std->dhSaiEnt = date("Y-m-d\TH:i:sP");
-        $std->tpNF = 1;
-        $std->idDest = 1;
-        $std->cMunFG = 3550308; // SP
-        $std->tpImp = 1;
-        $std->tpEmis = 1;
-        $std->cDV = 2;
-        $std->tpAmb = 2; // Homologação
-        $std->finNFe = 1;
-        $std->indFinal = 1;
-        $std->indPres = 1;
+        $std->cUF        = $emitCuf;
+        $std->cNF        = $cNF;
+        $std->natOp      = Setting::get('nfe_nat_op', 'VENDA DE PRODUTO');
+        $std->mod        = 55;
+        $std->serie      = $serie;
+        $std->nNF        = $proximaNNF;
+        $std->dhEmi      = date("Y-m-d\TH:i:sP");
+        $std->dhSaiEnt   = date("Y-m-d\TH:i:sP");
+        $std->tpNF       = 1;
+        $std->idDest     = 1;
+        $std->cMunFG     = $emitCMun;
+        $std->tpImp      = 1;
+        $std->tpEmis     = 1;
+        $std->cDV        = 0;
+        $std->tpAmb      = $tpAmb;
+        $std->finNFe     = 1;
+        $std->indFinal   = 1;
+        $std->indPres    = 1;
         $std->indIntermed = 0;
-        $std->procEmi = 0;
-        $std->verProc = '3.10.31';
+        $std->procEmi    = 0;
+        $std->verProc    = '1.0.0';
         $nfe->tagide($std);
-        
+
         // emitente
         $std = new stdClass();
         $std->xNome = $validated['emit_nome'];
         $std->xFant = $validated['emit_nome'];
-        $std->IE = $validated['emit_ie'];
-        $std->CRT = 3;
-        $std->CNPJ = preg_replace('/[^0-9]/', '', $validated['emit_cnpj']);
+        $std->IE    = preg_replace('/[^0-9]/', '', $validated['emit_ie']);
+        $std->CRT   = (int) Setting::get('nfe_crt', 1);
+        $std->CNPJ  = preg_replace('/[^0-9]/', '', $validated['emit_cnpj']);
         $nfe->tagemit($std);
-        
+
         $std = new stdClass();
-        $std->xLgr = Setting::get('nfe_emit_logradouro', 'Rua Padrão');
-        $std->nro = Setting::get('nfe_emit_numero', '123');
-        $std->xBairro = Setting::get('nfe_emit_bairro', 'Bairro Padrão');
-        $std->cMun = 3550308; // SP default IBGE
-        $std->xMun = Setting::get('nfe_emit_municipio', 'São Paulo');
-        $std->UF = Setting::get('nfe_emit_uf', 'SP');
-        $std->CEP = preg_replace('/[^0-9]/', '', Setting::get('nfe_emit_cep', '01000000'));
-        $std->cPais = 1058;
-        $std->xPais = 'Brasil';
+        $std->xLgr    = Setting::get('nfe_emit_logradouro', '');
+        $std->nro      = Setting::get('nfe_emit_numero', 'S/N');
+        $std->xBairro  = Setting::get('nfe_emit_bairro', '');
+        $std->cMun     = $emitCMun;
+        $std->xMun     = Setting::get('nfe_emit_municipio', '');
+        $std->UF       = $emitUf;
+        $std->CEP      = preg_replace('/[^0-9]/', '', Setting::get('nfe_emit_cep', ''));
+        $std->cPais    = 1058;
+        $std->xPais    = 'Brasil';
         $nfe->tagenderEmit($std);
-        
-        // destinatario
+
+        // destinatário
+        $destIE = $request->input('dest_ie') ? preg_replace('/[^0-9]/', '', $request->input('dest_ie')) : '';
+
         $std = new stdClass();
-        $std->xNome = $validated['dest_nome'];
-        $std->indIEDest = 9;
-        $std->IE = '';
-        
+        $std->xNome     = $validated['dest_nome'];
+        $std->indIEDest = $destIE ? 1 : 9; // 1 = Contribuinte ICMS, 9 = Não contribuinte
+        $std->IE        = $destIE;
+
         $doc = preg_replace('/[^0-9]/', '', $validated['dest_cpf']);
         if (strlen($doc) === 14) {
             $std->CNPJ = $doc;
@@ -136,181 +202,224 @@ class NFeController extends Controller
             $std->CPF = $doc;
         }
         $nfe->tagdest($std);
-        
+
+        $destCMun = $request->input('dest_cmun')
+            ? (int) preg_replace('/[^0-9]/', '', $request->input('dest_cmun'))
+            : $emitCMun;
+
         $std = new stdClass();
-        $std->xLgr = $validated['dest_logradouro'];
-        $std->nro = $validated['dest_numero'];
-        $std->xBairro = $validated['dest_bairro'];
-        $std->cMun = 3550308; // IBGE code
-        $std->xMun = $validated['dest_municipio'];
-        $std->UF = $validated['dest_uf'];
-        $std->CEP = preg_replace('/[^0-9]/', '', $validated['dest_cep']);
-        $std->cPais = 1058;
-        $std->xPais = 'Brasil';
+        $std->xLgr    = $validated['dest_logradouro'];
+        $std->nro      = $validated['dest_numero'];
+        $std->xBairro  = $validated['dest_bairro'];
+        $std->cMun     = $destCMun;
+        $std->xMun     = $validated['dest_municipio'];
+        $std->UF       = strtoupper($validated['dest_uf']);
+        $std->CEP      = preg_replace('/[^0-9]/', '', $validated['dest_cep']);
+        $std->cPais    = 1058;
+        $std->xPais    = 'Brasil';
         $nfe->tagenderDest($std);
 
-        // Variáveis para somatórios de TOTAIS
-        $vbcGlobal = 0.00;
-        $vicmsGlobal = 0.00;
-        $vpisGlobal = 0.00;
+        // ── Produtos e impostos ───────────────────────────────────
+        $vbcGlobal     = 0.00;
+        $vicmsGlobal   = 0.00;
+        $vpisGlobal    = 0.00;
         $vcofinsGlobal = 0.00;
-        $vprodGlobal = 0.00;
+        $vprodGlobal   = 0.00;
+
+        $pICMS   = (float) Setting::get('nfe_picms', 18);
+        $pPIS    = (float) Setting::get('nfe_ppis', 1.65);
+        $pCOFINS = (float) Setting::get('nfe_pcofins', 7.6);
 
         foreach ($validated['prod_descricao'] as $index => $descricao) {
-            $item_number = $index + 1;
-            $qtd = (float) $validated['prod_qtd'][$index];
+            $item  = $index + 1;
+            $qtd   = (float) $validated['prod_qtd'][$index];
             $vUnit = (float) $validated['prod_vlr_unit'][$index];
-            $vTot = (float) $validated['prod_vlr_total'][$index];
+            $vTot  = (float) $validated['prod_vlr_total'][$index];
 
             // produto
             $std = new stdClass();
-            $std->item = $item_number;
-            $std->cProd = str_pad($item_number, 4, '0', STR_PAD_LEFT);
-            $std->cEAN = 'SEM GTIN';
-            $std->xProd = $descricao;
-            $std->NCM = preg_replace('/[^0-9]/', '', $validated['prod_ncm'][$index]);
-            $std->CFOP = preg_replace('/[^0-9]/', '', $validated['prod_cfop'][$index]);
-            $std->uCom = 'UN';
-            $std->qCom = number_format($qtd, 4, '.', '');
-            $std->vUnCom = number_format($vUnit, 4, '.', '');
-            $std->vProd = number_format($vTot, 2, '.', '');
+            $std->item     = $item;
+            $std->cProd    = str_pad($item, 4, '0', STR_PAD_LEFT);
+            $std->cEAN     = 'SEM GTIN';
+            $std->xProd    = $descricao;
+            $std->NCM      = preg_replace('/[^0-9]/', '', $validated['prod_ncm'][$index]);
+            $std->CFOP     = preg_replace('/[^0-9]/', '', $validated['prod_cfop'][$index]);
+            $std->uCom     = 'UN';
+            $std->qCom     = number_format($qtd, 4, '.', '');
+            $std->vUnCom   = number_format($vUnit, 4, '.', '');
+            $std->vProd    = number_format($vTot, 2, '.', '');
             $std->cEANTrib = 'SEM GTIN';
-            $std->uTrib = 'UN';
-            $std->qTrib = number_format($qtd, 4, '.', '');
-            $std->vUnTrib = number_format($vUnit, 4, '.', '');
-            $std->indTot = 1;
+            $std->uTrib    = 'UN';
+            $std->qTrib    = number_format($qtd, 4, '.', '');
+            $std->vUnTrib  = number_format($vUnit, 4, '.', '');
+            $std->indTot   = 1;
             $nfe->tagprod($std);
 
-            // imposto tag base
+            // imposto (tag base)
             $std = new stdClass();
-            $std->item = $item_number;
+            $std->item = $item;
             $nfe->tagimposto($std);
-            
-            // Simplificado, ICMS base
+
+            // ICMS
+            $vIcms = ($vTot * $pICMS) / 100;
             $std = new stdClass();
-            $std->item = $item_number;
-            $std->orig = 0;
-            $std->CST = '00';
+            $std->item  = $item;
+            $std->orig  = 0;
+            $std->CST   = '00';
             $std->modBC = 0;
-            $std->vBC = number_format($vTot, 2, '.', '');
-            $std->pICMS = '18.0000';
-            $vIcms = ($vTot * 18) / 100;
+            $std->vBC   = number_format($vTot, 2, '.', '');
+            $std->pICMS = number_format($pICMS, 4, '.', '');
             $std->vICMS = number_format($vIcms, 2, '.', '');
             $nfe->tagICMS($std);
 
-            // PIS/COFINS mockados para evitar erros de validação
+            // PIS
+            $vPis = ($vTot * $pPIS) / 100;
             $std = new stdClass();
-            $std->item = $item_number;
-            $std->CST = '01';
-            $std->vBC = number_format($vTot, 2, '.', '');
-            $std->pPIS = '1.6500';
-            $vPis = ($vTot * 1.65) / 100;
+            $std->item = $item;
+            $std->CST  = '01';
+            $std->vBC  = number_format($vTot, 2, '.', '');
+            $std->pPIS = number_format($pPIS, 4, '.', '');
             $std->vPIS = number_format($vPis, 2, '.', '');
             $nfe->tagPIS($std);
 
+            // COFINS
+            $vCofins = ($vTot * $pCOFINS) / 100;
             $std = new stdClass();
-            $std->item = $item_number;
-            $std->CST = '01';
-            $std->vBC = number_format($vTot, 2, '.', '');
-            $std->pCOFINS = '7.6000';
-            $vCofins = ($vTot * 7.6) / 100;
+            $std->item    = $item;
+            $std->CST     = '01';
+            $std->vBC     = number_format($vTot, 2, '.', '');
+            $std->pCOFINS = number_format($pCOFINS, 4, '.', '');
             $std->vCOFINS = number_format($vCofins, 2, '.', '');
             $nfe->tagCOFINS($std);
 
-            // Somar acumulados
-            $vbcGlobal += $vTot;
-            $vicmsGlobal += $vIcms;
-            $vpisGlobal += $vPis;
+            // Acumuladores
+            $vbcGlobal     += $vTot;
+            $vicmsGlobal   += $vIcms;
+            $vpisGlobal    += $vPis;
             $vcofinsGlobal += $vCofins;
-            $vprodGlobal += $vTot;
+            $vprodGlobal   += $vTot;
         }
 
-        // Totais Globais da NF-e
+        // ── Totais ────────────────────────────────────────────────
         $std = new stdClass();
-        $std->vBC = number_format($vbcGlobal, 2, '.', '');
-        $std->vICMS = number_format($vicmsGlobal, 2, '.', '');
+        $std->vBC        = number_format($vbcGlobal, 2, '.', '');
+        $std->vICMS      = number_format($vicmsGlobal, 2, '.', '');
         $std->vICMSDeson = '0.00';
-        $std->vFCP = '0.00';
-        $std->vBCST = '0.00';
-        $std->vST = '0.00';
-        $std->vFCPST = '0.00';
-        $std->vFCPSTRet = '0.00';
-        $std->vProd = number_format($vprodGlobal, 2, '.', '');
-        $std->vFrete = '0.00';
-        $std->vSeg = '0.00';
-        $std->vDesc = '0.00';
-        $std->vII = '0.00';
-        $std->vIPI = '0.00';
-        $std->vIPIDevol = '0.00';
-        $std->vPIS = number_format($vpisGlobal, 2, '.', '');
-        $std->vCOFINS = number_format($vcofinsGlobal, 2, '.', '');
-        $std->vOutro = '0.00';
-        $std->vNF = number_format($vprodGlobal, 2, '.', ''); // Total da nota é o total dos produtos (sem frete/descontos nessta versão)
+        $std->vFCP       = '0.00';
+        $std->vBCST      = '0.00';
+        $std->vST        = '0.00';
+        $std->vFCPST     = '0.00';
+        $std->vFCPSTRet  = '0.00';
+        $std->vProd      = number_format($vprodGlobal, 2, '.', '');
+        $std->vFrete     = '0.00';
+        $std->vSeg       = '0.00';
+        $std->vDesc      = '0.00';
+        $std->vII        = '0.00';
+        $std->vIPI       = '0.00';
+        $std->vIPIDevol  = '0.00';
+        $std->vPIS       = number_format($vpisGlobal, 2, '.', '');
+        $std->vCOFINS    = number_format($vcofinsGlobal, 2, '.', '');
+        $std->vOutro     = '0.00';
+        $std->vNF        = number_format($vprodGlobal, 2, '.', '');
         $nfe->tagICMSTot($std);
-        
-        // frete
+
+        // ── Transporte ────────────────────────────────────────────
         $std = new stdClass();
         $std->modFrete = 9; // Sem frete
         $nfe->tagtransp($std);
 
-        // pagamentos globais (A vista, valor total da nota)
+        // ── Pagamento ─────────────────────────────────────────────
         $std = new stdClass();
         $std->vTroco = '0.00';
         $nfe->tagpag($std);
-        
+
         $std = new stdClass();
-        $std->indPag = 0; // A vista
-        $std->tPag = '01'; // Dinheiro
-        $std->vPag = number_format($vprodGlobal, 2, '.', '');
+        $std->indPag = 0;
+        $std->tPag   = '01';
+        $std->vPag   = number_format($vprodGlobal, 2, '.', '');
         $nfe->tagdetPag($std);
-        
+
+        // ── Montagem, Assinatura e Envio ──────────────────────────
         try {
-            // Executa a montagem verificando erros na validação lógica dos nós
             $nfe->montaNFe();
-            $xml = $nfe->getXML();
+            $xml    = $nfe->getXML();
             $errors = $nfe->getErrors();
-            
+
             if (!empty($errors)) {
                 return response()->json([
-                    'error' => 'Erro na validação do XML da NF-e',
-                    'validation_errors' => $errors
+                    'error'             => 'Erro na validação do XML da NF-e',
+                    'validation_errors' => $errors,
                 ], 422);
             }
-            
-            // Tentar assinar o XML caso o certificado esteja configurado
-            $certificadoPath = Setting::get('nfe_certificado_path');
-            $certificadoSenha = Setting::get('nfe_certificado_senha') ? decrypt(Setting::get('nfe_certificado_senha')) : '';
 
-            if ($certificadoPath && Storage::disk('local')->exists($certificadoPath)) {
-                $pfxContent = Storage::disk('local')->get($certificadoPath);
-                
-                try {
-                    $certificate = Certificate::readPfx($pfxContent, $certificadoSenha);
-                    $tools = new Tools($this->getToolsConfig(), $certificate);
-                    
-                    // Assina a NFe
-                    $xmlAssinado = $tools->signNFe($xml);
-                    
-                    // TODO: Aqui entraria o envio ($tools->sefazEnviaLote([$xmlAssinado], 1))
-                    
-                    return response($xmlAssinado, 200)
-                        ->header('Content-Type', 'text/xml')
-                        ->header('Content-Disposition', 'attachment; filename="nfe_assinado_' . time() . '.xml"');
-                } catch (\Exception $e) {
-                    return response()->json([
-                        'error' => 'Erro ao assinar o XML com o Certificado Digital',
-                        'exception' => $e->getMessage(),
-                    ], 500);
-                }
+            // ── Modo Teste (sem certificado) ──────────────────────
+            // Em homologação (tpAmb=2) e sem certificado, retorna o XML
+            // sem assinar para que o usuário possa testar a montagem.
+            if (!$temCertificado) {
+                Setting::set('nfe_proxima_nnf', $proximaNNF + 1);
+
+                return response($xml, 200)
+                    ->header('Content-Type', 'text/xml')
+                    ->header('Content-Disposition', 'attachment; filename="nfe_teste_' . $proximaNNF . '.xml"');
             }
 
-            // Fallback se não tiver certificado, retorna o XML sem assinar (Apenas o Protótipo de Construção)
-            return response($xml, 200)
-                ->header('Content-Type', 'text/xml')
-                ->header('Content-Disposition', 'attachment; filename="nfe_prototipo_' . time() . '.xml"');
+            // ── Modo Produção (com certificado): Assinar e Enviar ─
+            $xmlAssinado = $tools->signNFe($xml);
+
+            // Enviar lote para a SEFAZ
+            $idLote   = str_pad(random_int(1, 999999999999999), 15, '0', STR_PAD_LEFT);
+            $resposta = $tools->sefazEnviaLote([$xmlAssinado], $idLote);
+
+            $st       = new Standardize($resposta);
+            $stdResp  = $st->toStd();
+
+            // Verificar se o lote foi recebido com sucesso (cStat 103 = Lote recebido)
+            if (!isset($stdResp->cStat) || (int) $stdResp->cStat !== 103) {
+                return response()->json([
+                    'error'   => 'SEFAZ rejeitou o lote',
+                    'cStat'   => $stdResp->cStat ?? null,
+                    'xMotivo' => $stdResp->xMotivo ?? 'Motivo desconhecido',
+                ], 422);
+            }
+
+            // Consultar recibo para obter protocolo de autorização
+            $nRec = $stdResp->infRec->nRec;
+
+            sleep(3);
+
+            $protocolo = $tools->sefazConsultaRecibo($nRec);
+            $stProt    = new Standardize($protocolo);
+            $stdProt   = $stProt->toStd();
+
+            // Verificar autorização (cStat 104 = Lote processado)
+            if (isset($stdProt->protNFe->infProt->cStat)) {
+                $cStatProt = (int) $stdProt->protNFe->infProt->cStat;
+
+                if ($cStatProt === 100) {
+                    Setting::set('nfe_proxima_nnf', $proximaNNF + 1);
+
+                    $xmlProtocolado = Complements::toAuthorize($xmlAssinado, $protocolo);
+
+                    return response($xmlProtocolado, 200)
+                        ->header('Content-Type', 'text/xml')
+                        ->header('Content-Disposition', 'attachment; filename="nfe_' . $proximaNNF . '_autorizada.xml"');
+                }
+
+                return response()->json([
+                    'error'   => 'NF-e não autorizada pela SEFAZ',
+                    'cStat'   => $cStatProt,
+                    'xMotivo' => $stdProt->protNFe->infProt->xMotivo ?? 'Motivo desconhecido',
+                ], 422);
+            }
+
+            return response()->json([
+                'warning' => 'O lote foi enviado mas o recibo ainda não foi processado. Tente consultar novamente.',
+                'nRec'    => $nRec,
+            ], 202);
+
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Erro inesperado ao gerar XML',
+                'error'     => 'Erro ao processar NF-e',
                 'exception' => $e->getMessage(),
             ], 500);
         }

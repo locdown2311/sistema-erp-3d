@@ -33,12 +33,39 @@
                     </h3>
                 </div>
                 
-                <div class="p-5 space-y-5 cursor-not-allowed opacity-80" title="Altere estes dados nas Configurações Gerais.">
+                <div class="p-5 space-y-5">
                     
-                    <div class="bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 text-xs px-3 py-2 rounded-md mb-2 flex items-center gap-2">
+                    <div class="bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 text-xs px-3 py-2 rounded-md mb-4 flex items-center gap-2">
                         <i class="fas fa-lock"></i> Dados importados automaticamente das Configurações
                     </div>
 
+                    {{-- Logo do Emitente --}}
+                    <div class="mb-5">
+                        <label class="block text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-1.5">Logo da Empresa</label>
+                        <p class="text-xs text-zinc-400 dark:text-zinc-500 mb-2">Utilizada no DANFE impresso. Carregada das Configurações ou envie uma diretamente.</p>
+                        
+                        <div class="flex items-center gap-4">
+                            <div id="nfe-logo-preview" class="w-20 h-20 rounded-lg border-2 border-dashed border-zinc-300 dark:border-zinc-700 flex items-center justify-center overflow-hidden bg-white dark:bg-zinc-950 shrink-0">
+                                @if(auth()->user()->store_logo_url)
+                                    <img src="{{ auth()->user()->store_logo_url }}" alt="Logo" class="w-full h-full object-contain" id="nfe-logo-img">
+                                @else
+                                    <div id="nfe-logo-placeholder" class="text-center">
+                                        <i class="fas fa-image text-zinc-300 dark:text-zinc-600 text-2xl"></i>
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <label class="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs font-medium text-zinc-600 dark:text-zinc-300 transition-colors">
+                                    <i class="fas fa-upload text-[10px]"></i> Enviar outra logo
+                                    <input type="file" name="nfe_logo" accept="image/png,image/jpeg" class="hidden" id="nfe-logo-input">
+                                </label>
+                                <span class="text-[10px] text-zinc-400 dark:text-zinc-500">PNG ou JPEG, recomendado 300×100px</span>
+                            </div>
+                        </div>
+                        <input type="hidden" name="nfe_logo_base64" id="nfe-logo-base64" value="">
+                    </div>
+
+                    <div class="cursor-not-allowed opacity-80" title="Altere estes dados nas Configurações Gerais.">
                     <div>
                         <label class="block text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-1.5">Razão Social</label>
                         <input type="text" name="emit_nome" value="{{ $emit_nome }}" class="w-full px-4 py-2 bg-zinc-100 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-500 dark:text-zinc-500 pointer-events-none" readonly>
@@ -54,6 +81,7 @@
                             <input type="text" name="emit_ie" value="{{ $emit_ie }}" class="w-full px-4 py-2 bg-zinc-100 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-500 dark:text-zinc-500 pointer-events-none" readonly>
                         </div>
                     </div>
+                    </div> {{-- end cursor-not-allowed --}}
                 </div>
             </div>
 
@@ -80,6 +108,15 @@
                         <div class="md:col-span-1">
                             <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">CPF / CNPJ <span class="text-red-500">*</span></label>
                             <input type="text" name="dest_cpf" value="12345678901" class="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-shadow outline-none tracking-wide" required>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Inscrição Estadual (IE) do Destinatário</label>
+                            <p class="text-xs text-zinc-400 dark:text-zinc-500 mb-1.5">Preencha apenas se o destinatário for <strong>contribuinte do ICMS</strong> (empresa com IE). Deixe em branco para pessoa física ou empresa sem IE.</p>
+                            <input type="text" name="dest_ie" value="" placeholder="Ex: 123456789012 (opcional)"
+                                class="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-shadow outline-none tracking-wide font-mono">
                         </div>
                     </div>
 
@@ -224,6 +261,23 @@
 @section('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // ── Logo preview ──────────────────────────────────────
+        const logoInput = document.getElementById('nfe-logo-input');
+        if (logoInput) {
+            logoInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    const previewBox = document.getElementById('nfe-logo-preview');
+                    previewBox.innerHTML = '<img src="' + ev.target.result + '" class="w-full h-full object-contain" id="nfe-logo-img">';
+                    document.getElementById('nfe-logo-base64').value = ev.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
         const container = document.getElementById('produtos-wrapper');
         const btnAdd = document.getElementById('btn-add-produto');
         

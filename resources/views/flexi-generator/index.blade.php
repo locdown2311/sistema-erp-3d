@@ -83,10 +83,21 @@
             <div class="p-4 space-y-5 shadow-inner bg-zinc-50/30 dark:bg-zinc-950/30">
                 {{-- Pattern Type --}}
                 <div class="grid grid-cols-2 gap-2">
-                    <button id="pat-custom" class="pattern-card relative flex flex-col justify-center items-center gap-1.5 p-2 rounded-lg border-2 border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 opacity-50 cursor-not-allowed transition-all" title="Upload Desativado Temporariamente">
-                        <i class="fas fa-cube text-xl text-zinc-400 mb-1 mt-1"></i>
-                        <span class="text-[10px] font-semibold text-zinc-500 dark:text-zinc-600 text-center leading-tight">Cortador<br>Upload</span>
-                    </button>
+                    @if($canUploadCutter)
+                        <button onclick="selectPattern('custom')" id="pat-custom" class="pattern-card relative flex flex-col justify-center items-center gap-1.5 p-2 rounded-lg border-2 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 transition-all">
+                            <i class="fas fa-upload text-xl text-zinc-400 mb-1 mt-1"></i>
+                            <span class="text-[10px] font-semibold text-zinc-500 dark:text-zinc-400 text-center leading-tight">Cortador<br>Upload</span>
+                        </button>
+                    @else
+                        <div onclick="Swal.fire({icon: 'warning', title: 'Recurso Premium', text: 'O upload de cortadores personalizados é exclusivo dos planos Basic e Pro. Faça upgrade para utilizar!', confirmButtonText: 'Ver Planos', confirmButtonColor: '#6366f1'}).then((result) => { if(result.isConfirmed) window.location.href = '{{ route('plans.index') }}' })" class="pattern-card relative flex flex-col justify-center items-center gap-1.5 p-2 rounded-lg border-2 border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 cursor-pointer overflow-hidden group">
+                            <i class="fas fa-upload text-xl text-zinc-400 mb-1 mt-1"></i>
+                            <span class="text-[10px] font-semibold text-zinc-500 dark:text-zinc-600 text-center leading-tight">Cortador<br>Upload</span>
+                            
+                            <div class="absolute inset-0 bg-zinc-900/10 dark:bg-black/40 backdrop-blur-[1px] flex items-center justify-center transition-all group-hover:bg-zinc-900/20 dark:group-hover:bg-black/60">
+                                <span class="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg"><i class="fas fa-lock mr-0.5"></i> PRO</span>
+                            </div>
+                        </div>
+                    @endif
                     <button onclick="selectPattern('fixed')" id="pat-fixed" class="pattern-card relative flex flex-col justify-center items-center gap-1.5 p-2 rounded-lg border-2 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 transition-all">
                         <i class="fas fa-plug text-xl text-zinc-400 mb-1 mt-1"></i>
                         <span class="text-[10px] font-semibold text-zinc-500 dark:text-zinc-400 text-center leading-tight">Encaixe<br>Base</span>

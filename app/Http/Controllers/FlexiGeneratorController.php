@@ -11,9 +11,13 @@ class FlexiGeneratorController extends Controller
         $user = auth()->user();
         $usage = $user->getPlanUsage('flexi_cuts');
         
+        $currentPlan = $user->currentPlan();
+        $canUploadCutter = $currentPlan ? in_array($currentPlan->slug, ['basic', 'pro']) : false;
+
         return view('flexi-generator.index', [
             'flexi_current' => $usage['current'],
             'flexi_limit' => $usage['limit'],
+            'canUploadCutter' => $canUploadCutter,
         ]);
     }
 

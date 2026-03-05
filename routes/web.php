@@ -69,6 +69,8 @@ Route::middleware('auth')->group(function () {
     Route::get('stock', [StockController::class, 'index'])->name('stock.index');
     Route::post('stock', [StockController::class, 'store'])->name('stock.store');
 
+    Route::get('sales/report/pdf', [SaleController::class, 'reportPdf'])->name('sales.report.pdf');
+    Route::put('sales/{sale}/tracking', [SaleController::class, 'updateTracking'])->name('sales.tracking.update');
     Route::resource('sales', SaleController::class);
 
     Route::get('costs', [CostController::class, 'index'])->name('costs.index');

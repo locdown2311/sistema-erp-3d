@@ -17,8 +17,8 @@
             <i class="fas fa-chart-bar text-indigo-500"></i>
             <h3 class="font-semibold text-zinc-900 dark:text-white">Seu uso atual — <span class="text-indigo-500">{{ $currentPlan->name }}</span></h3>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            @foreach(['products' => ['Produtos', 'fa-boxes-stacked', 'emerald'], 'sales' => ['Vendas/mês', 'fa-cash-register', 'blue'], 'wishlists' => ['Wishlists', 'fa-heart', 'pink']] as $key => [$label, $icon, $color])
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            @foreach(['products' => ['Produtos', 'fa-boxes-stacked', 'emerald'], 'sales' => ['Vendas/mês', 'fa-cash-register', 'blue'], 'wishlists' => ['Wishlists', 'fa-heart', 'pink'], 'flexi_cuts' => ['Gerador Flexi', 'fa-cube', 'indigo']] as $key => [$label, $icon, $color])
                 @php
                     $u = $usage[$key];
                     $pct = $u['limit'] ? min(round(($u['current'] / $u['limit']) * 100), 100) : 0;
@@ -85,7 +85,7 @@
 
                 {{-- Limits --}}
                 <div class="px-6 pb-4">
-                    <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="grid grid-cols-2 gap-2 text-center">
                         <div class="p-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
                             <div class="text-lg font-bold text-zinc-900 dark:text-white">{{ $plan->max_products ?? '∞' }}</div>
                             <div class="text-[11px] text-zinc-500 dark:text-zinc-400">Produtos</div>
@@ -97,6 +97,10 @@
                         <div class="p-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
                             <div class="text-lg font-bold text-zinc-900 dark:text-white">{{ $plan->max_wishlists ?? '∞' }}</div>
                             <div class="text-[11px] text-zinc-500 dark:text-zinc-400">Wishlists</div>
+                        </div>
+                        <div class="p-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
+                            <div class="text-lg font-bold text-zinc-900 dark:text-white">{{ $plan->max_flexi_cuts ?? '∞' }}</div>
+                            <div class="text-[11px] text-zinc-500 dark:text-zinc-400">Gerador Flexi</div>
                         </div>
                     </div>
                 </div>
