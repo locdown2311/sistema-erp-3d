@@ -8,7 +8,7 @@
         
         // Poll every 10 seconds
         setInterval(() => {
-            fetch(`/loja/${storeSlug}/latest-offer?since=${encodeURIComponent(lastChecked)}`, {
+            fetch(`/loja/${storeSlug}/oferta-recente?since=${encodeURIComponent(lastChecked)}`, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json'

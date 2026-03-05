@@ -281,7 +281,7 @@ function openModal(filament = null) {
 
     if (filament) {
         document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit text-zinc-400"></i> Editar Filamento';
-        form.action = `/filaments/${filament.id}`;
+        form.action = `/filamentos/${filament.id}`;
         methodField.value = 'PUT';
         document.getElementById('fType').value = filament.type;
         document.getElementById('fColor').value = filament.color || '';

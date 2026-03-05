@@ -256,7 +256,7 @@
 @section('scripts')
 <script>
     function openSuspendModal(userId, userName) {
-        document.getElementById('suspendForm').action = `/panel/users/${userId}/suspend`;
+        document.getElementById('suspendForm').action = `/painel/usuarios/${userId}/suspender`;
         document.getElementById('suspendUserName').textContent = userName;
         document.getElementById('suspendModal').classList.remove('hidden');
     }
@@ -266,7 +266,7 @@
     }
 
     function openDeleteModal(userId, userName) {
-        document.getElementById('deleteForm').action = `/panel/users/${userId}`;
+        document.getElementById('deleteForm').action = `/painel/usuarios/${userId}`;
         document.getElementById('deleteUserName').textContent = userName;
         document.getElementById('deleteForm').querySelector('input[name=password]').value = '';
         document.getElementById('deleteModal').classList.remove('hidden');

@@ -513,7 +513,7 @@
         }, 10);
         
         // Fetch API
-        fetch(`/api/tracking/${code}`)
+        fetch(`/api/rastreio/${code}`)
             .then(res => res.json())
             .then(data => {
                 tLoading.classList.add('hidden');
