@@ -153,7 +153,7 @@
                         <div class="group flex flex-col bg-white/70 dark:bg-zinc-900/40 backdrop-blur-xl border border-zinc-200 dark:border-white/10 rounded-[2rem] hover:-translate-y-2 transition-all duration-500 overflow-hidden shadow-sm hover:shadow-xl dark:shadow-none dark:hover:shadow-[0_0_30px_rgba(0,0,0,0.5)]">
                             <div class="relative aspect-[4/3] bg-zinc-100/50 dark:bg-zinc-950/50 flex items-center justify-center overflow-hidden p-6 z-0">
                                 @if($offer->image_path)
-                                    <img src="{{ $offer->image_url }}" class="w-full h-full object-contain filter drop-shadow-lg group-hover:scale-110 transition-transform duration-700" alt="{{ $offer->name }}">
+                                    <img src="{{ $offer->thumbnail_url }}" class="w-full h-full object-contain filter drop-shadow-lg group-hover:scale-110 transition-transform duration-700" alt="{{ $offer->name }}">
                                 @else
                                     <i class="fas fa-box text-6xl text-zinc-300 dark:text-zinc-700 group-hover:scale-110 transition-transform duration-700"></i>
                                 @endif
