@@ -34,8 +34,8 @@
                         <i class="fas fa-tachometer-alt"></i> Meu Painel
                     </a>
                 @else
-                    <a href="{{ route('login') }}" class="hidden sm:inline-flex text-sm font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors">Entrar</a>
-                    <a href="{{ route('register') }}" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-bold rounded-full transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] hover:-translate-y-0.5">
+                    <a href="{{ route('login') }}" class="inline-flex text-sm font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors">Entrar</a>
+                    <a href="{{ route('register') }}" class="inline-flex items-center justify-center gap-2 px-3 py-2 sm:px-6 sm:py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white text-xs sm:text-sm font-bold rounded-full transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] hover:-translate-y-0.5">
                         Criar Loja Grátis
                     </a>
                 @endauth
