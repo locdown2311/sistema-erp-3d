@@ -18,7 +18,13 @@
         }
     </script>
 </head>
-<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 min-h-screen flex items-center justify-center p-4">
+<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div class="w-full max-w-lg mb-4">
+        <a href="{{ route('home') }}" class="inline-flex items-center gap-2 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
+            <i class="fas fa-arrow-left"></i> Voltar ao início
+        </a>
+    </div>
 
     <div class="w-full max-w-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm p-6 sm:p-8 max-h-[95vh] overflow-y-auto custom-scrollbar">
         <div class="text-center mb-8">
