@@ -80,8 +80,10 @@ class AdminUserController extends Controller
         $user->update([
             'suspended_at' => now(),
             'suspension_reason' => $request->reason,
+            'remember_token' => null, // Invalidar "lembrar de mim"
         ]);
 
+        // O middleware CheckSuspended forçará o logout na próxima requisição do usuário
         return back()->with('success', "Usuário {$user->name} foi suspenso.");
     }
 
