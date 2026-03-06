@@ -157,7 +157,7 @@ async function renderCalendar() {
 
     // Fetch tasks
     try {
-        const res = await fetch(`{{ url('calendar/tasks') }}?month=${currentMonth + 1}&year=${currentYear}`);
+        const res = await fetch(`{{ route('calendar.tasks') }}?month=${currentMonth + 1}&year=${currentYear}`);
         if(res.ok) tasks = await res.json();
     } catch(e) {
         console.error("Failed to load tasks", e);
@@ -327,7 +327,7 @@ document.getElementById('taskForm').addEventListener('submit', async (e) => {
         color: document.getElementById('taskColor').value,
     };
 
-    const url = id ? `{{ url('calendar/tasks') }}/${id}` : '{{ route("calendar.tasks.store") }}';
+    const url = id ? `{{ url('calendario/tarefas') }}/${id}` : '{{ route("calendar.tasks.store") }}';
     const method = id ? 'PUT' : 'POST';
 
     try {
@@ -353,7 +353,7 @@ async function deleteTask() {
     if (!id || !confirm('Excluir esta tarefa?')) return;
 
     try {
-        await fetch(`{{ url('calendar/tasks') }}/${id}`, {
+        await fetch(`{{ url('calendario/tarefas') }}/${id}`, {
             method: 'DELETE',
             headers: { 'X-CSRF-TOKEN': csrfToken },
         });
