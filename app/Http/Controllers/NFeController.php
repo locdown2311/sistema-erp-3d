@@ -21,11 +21,58 @@ class NFeController extends Controller
         }
 
         $products = auth()->user()->products()->orderBy('name')->where('active', true)->get();
+        
+        // Fetch last 50 completed sales for the auto-fill dropdown
+        $sales = auth()->user()->sales()
+            ->with(['items.product', 'customer'])
+            ->where('status', 'completed')
+            ->orderBy('sale_date', 'desc')
+            ->limit(50)
+            ->get()
+            ->map(function ($sale) {
+                return [
+                    'id' => $sale->id,
+                    'reference' => 'Venda #' . $sale->id,
+                    'date' => $sale->sale_date,
+                    'total' => $sale->total,
+                    'customer' => $sale->customer ? [
+                        'name' => $sale->customer->name,
+                        'document' => $sale->customer->document,
+                        'ie' => $sale->customer->ie,
+                        'cep' => $sale->customer->cep,
+                        'address' => $sale->customer->address,
+                        'number' => $sale->customer->number,
+                        'neighborhood' => $sale->customer->neighborhood,
+                        'city' => $sale->customer->city,
+                        'state' => $sale->customer->state,
+                    ] : null,
+                    'items' => $sale->items->map(function ($item) {
+                        return [
+                            'product_id' => $item->product_id,
+                            'name' => $item->product ? $item->product->name : 'Produto Removido',
+                            'ncm' => $item->product ? $item->product->ncm : '',
+                            'quantity' => $item->quantity,
+                            'price' => $item->unit_price,
+                            'total' => $item->total_price,
+                        ];
+                    }),
+                ];
+            });
+
         $emit_nome = Setting::get('nfe_emit_nome');
         $emit_cnpj = Setting::get('nfe_emit_cnpj');
         $emit_ie   = Setting::get('nfe_emit_ie');
 
-        return view('nfe.index', compact('products', 'emit_nome', 'emit_cnpj', 'emit_ie'));
+        return \Inertia\Inertia::render('NFe/Index', [
+            'products' => $products,
+            'sales' => $sales,
+            'settings' => [
+                'emit_nome' => $emit_nome,
+                'emit_cnpj' => $emit_cnpj,
+                'emit_ie'   => $emit_ie,
+                'default_cfop' => Setting::get('nfe_default_cfop', '5102'),
+            ]
+        ]);
     }
 
     /**
@@ -124,9 +171,7 @@ class NFeController extends Controller
             $tools       = new Tools($this->getToolsConfig(), $certificate);
         } elseif ($tpAmb === 1) {
             // Em produção o certificado é obrigatório
-            return response()->json([
-                'error' => 'Certificado digital A1 não configurado. Vá em Configurações e faça o upload do seu certificado .pfx.',
-            ], 422);
+            return redirect()->back()->with('error', 'Certificado digital A1 não configurado. Vá em Configurações e faça o upload do seu certificado .pfx.');
         }
 
         // ── Montagem do XML ───────────────────────────────────────
@@ -163,7 +208,7 @@ class NFeController extends Controller
         $std->indPres    = 1;
         $std->indIntermed = 0;
         $std->procEmi    = 0;
-        $std->verProc    = '1.0.0';
+        $std->verProc    = 'Sys3D 1.0.0';
         $nfe->tagide($std);
 
         // emitente
@@ -171,7 +216,8 @@ class NFeController extends Controller
         $std->xNome = $validated['emit_nome'];
         $std->xFant = $validated['emit_nome'];
         $std->IE    = preg_replace('/[^0-9]/', '', $validated['emit_ie']);
-        $std->CRT   = (int) Setting::get('nfe_crt', 1);
+        // CRT 1 = Simples Nacional
+        $std->CRT   = 1;
         $std->CNPJ  = preg_replace('/[^0-9]/', '', $validated['emit_cnpj']);
         $nfe->tagemit($std);
 
@@ -260,17 +306,12 @@ class NFeController extends Controller
             $std->item = $item;
             $nfe->tagimposto($std);
 
-            // ICMS
-            $vIcms = ($vTot * $pICMS) / 100;
+            // ICMS (Simples Nacional - CSOSN 102 - Sem permissão de crédito)
             $std = new stdClass();
             $std->item  = $item;
             $std->orig  = 0;
-            $std->CST   = '00';
-            $std->modBC = 0;
-            $std->vBC   = number_format($vTot, 2, '.', '');
-            $std->pICMS = number_format($pICMS, 4, '.', '');
-            $std->vICMS = number_format($vIcms, 2, '.', '');
-            $nfe->tagICMS($std);
+            $std->CSOSN = '102';
+            $nfe->tagICMSSN($std);
 
             // PIS
             $vPis = ($vTot * $pPIS) / 100;
@@ -292,9 +333,9 @@ class NFeController extends Controller
             $std->vCOFINS = number_format($vCofins, 2, '.', '');
             $nfe->tagCOFINS($std);
 
-            // Acumuladores
+            // Acumuladores globais
             $vbcGlobal     += $vTot;
-            $vicmsGlobal   += $vIcms;
+            $vicmsGlobal   += 0; // Nenhuma ST na nota SN102
             $vpisGlobal    += $vPis;
             $vcofinsGlobal += $vCofins;
             $vprodGlobal   += $vTot;
@@ -346,10 +387,7 @@ class NFeController extends Controller
             $errors = $nfe->getErrors();
 
             if (!empty($errors)) {
-                return response()->json([
-                    'error'             => 'Erro na validação do XML da NF-e',
-                    'validation_errors' => $errors,
-                ], 422);
+                return redirect()->back()->with('error', 'Erro na validação do XML estrutural da NF-e: ' . implode('<br>', $errors));
             }
 
             // ── Modo Teste (sem certificado) ──────────────────────
@@ -375,11 +413,7 @@ class NFeController extends Controller
 
             // Verificar se o lote foi recebido com sucesso (cStat 103 = Lote recebido)
             if (!isset($stdResp->cStat) || (int) $stdResp->cStat !== 103) {
-                return response()->json([
-                    'error'   => 'SEFAZ rejeitou o lote',
-                    'cStat'   => $stdResp->cStat ?? null,
-                    'xMotivo' => $stdResp->xMotivo ?? 'Motivo desconhecido',
-                ], 422);
+                return redirect()->back()->with('error', 'SEFAZ rejeitou o lote de Notas Fiscais. <br>Motivo: ' . ($stdResp->xMotivo ?? 'Desconhecido'));
             }
 
             // Consultar recibo para obter protocolo de autorização
@@ -405,11 +439,7 @@ class NFeController extends Controller
                         ->header('Content-Disposition', 'attachment; filename="nfe_' . $proximaNNF . '_autorizada.xml"');
                 }
 
-                return response()->json([
-                    'error'   => 'NF-e não autorizada pela SEFAZ',
-                    'cStat'   => $cStatProt,
-                    'xMotivo' => $stdProt->protNFe->infProt->xMotivo ?? 'Motivo desconhecido',
-                ], 422);
+                return redirect()->back()->with('error', 'NF-e rejeitada pela Sefaz. <br>Motivo: ' . ($stdProt->protNFe->infProt->xMotivo ?? 'Desconhecido'));
             }
 
             return response()->json([
@@ -418,10 +448,7 @@ class NFeController extends Controller
             ], 202);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'error'     => 'Erro ao processar NF-e',
-                'exception' => $e->getMessage(),
-            ], 500);
+            return redirect()->back()->with('error', 'Erro inesperado ao gerar/assinar o arquivo XML: ' . $e->getMessage());
         }
     }
 }
