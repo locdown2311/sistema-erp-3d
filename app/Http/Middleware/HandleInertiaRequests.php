@@ -35,9 +35,32 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $userData = null;
+
+        if ($user) {
+            $currentPlan = $user->currentPlan();
+            $userData = [
+                'id' => $user->id,
+                'name' => $user->name,
+                'slug' => $user->slug,
+                'is_admin' => $user->is_admin,
+                'store_name' => $user->store_name,
+                'store_logo' => $user->store_logo,
+                'store_logo_thumbnail_url' => $user->store_logo_thumbnail_url,
+                'can_use_nfe' => $currentPlan ? $currentPlan->can_use_nfe : false,
+            ];
+        }
+
         return [
             ...parent::share($request),
-            //
+            'auth' => [
+                'user' => $userData,
+            ],
+            'csrf_token' => csrf_token(),
+            'setting' => [
+                'company_name' => \App\Models\Setting::get('company_name', 'Central 3D'),
+            ]
         ];
     }
 }

@@ -17,9 +17,15 @@
         }
     </script>
     
-    @routes
     @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
     @inertiaHead
+    <style>
+        #app {
+            display: flex;
+            width: 100%;
+            flex: 1 1 0%;
+        }
+    </style>
 </head>
 <body class="bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 min-h-screen flex text-sm sm:text-base">
     @inertia

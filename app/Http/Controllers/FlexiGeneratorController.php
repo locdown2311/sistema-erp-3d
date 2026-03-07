@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
+use Inertia\Inertia;
+
 class FlexiGeneratorController extends Controller
 {
     public function index()
@@ -14,7 +16,7 @@ class FlexiGeneratorController extends Controller
         $currentPlan = $user->currentPlan();
         $canUploadCutter = $currentPlan ? in_array($currentPlan->slug, ['basic', 'pro']) : false;
 
-        return view('flexi-generator.index', [
+        return Inertia::render('FlexiGenerator/Index', [
             'flexi_current' => $usage['current'],
             'flexi_limit' => $usage['limit'],
             'canUploadCutter' => $canUploadCutter,

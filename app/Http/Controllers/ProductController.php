@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Services\PixelDrainService;
+use Inertia\Inertia;
 
 class ProductController extends Controller
 {
@@ -26,7 +27,11 @@ class ProductController extends Controller
         $products = $query->orderBy('name')->paginate(24)->withQueryString();
         $categories = Product::where('user_id', auth()->id())->distinct()->whereNotNull('category')->pluck('category');
 
-        return view('products.index', compact('products', 'categories'));
+        return Inertia::render('Products/Index', [
+            'products' => $products,
+            'categories' => $categories,
+            'filters' => request()->only(['search', 'category'])
+        ]);
     }
 
     public function create()
@@ -41,7 +46,9 @@ class ProductController extends Controller
         }
 
         $categories = Product::where('user_id', auth()->id())->distinct()->whereNotNull('category')->pluck('category');
-        return view('products.create', compact('categories'));
+        return Inertia::render('Products/Create', [
+            'categories' => $categories
+        ]);
     }
 
     public function store(Request $request)
@@ -100,19 +107,17 @@ class ProductController extends Controller
             ->with('success', 'Produto criado com sucesso!');
     }
 
-    public function show(Product $product)
-    {
-        $this->authorizeProduct($product);
-        $product->load('variations', 'stockMovements', 'printCosts', 'images');
-        return view('products.show', compact('product'));
-    }
+
 
     public function edit(Product $product)
     {
         $this->authorizeProduct($product);
         $product->load('variations', 'images');
         $categories = Product::where('user_id', auth()->id())->distinct()->whereNotNull('category')->pluck('category');
-        return view('products.edit', compact('product', 'categories'));
+        return Inertia::render('Products/Edit', [
+            'product' => $product,
+            'categories' => $categories
+        ]);
     }
 
     public function update(Request $request, Product $product)
