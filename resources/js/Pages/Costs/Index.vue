@@ -38,10 +38,14 @@ watch(() => form.product_id, (newProductId) => {
     if (newProductId) {
         const p = props.products.find(x => x.id === newProductId);
         if (p) {
-            form.filament_weight_g = parseFloat(p.weight_grams) || 0;
-            form.print_time_hours = parseFloat(p.print_time_hours) || 0;
-            if (!form.name) form.name = p.name;
+            form.filament_weight_g = Number(p.weight_grams) || 0;
+            form.print_time_hours = Number(p.print_time_hours) || 0;
+            form.name = p.name;
         }
+    } else {
+        form.filament_weight_g = 0;
+        form.print_time_hours = 0;
+        form.name = '';
     }
 });
 
