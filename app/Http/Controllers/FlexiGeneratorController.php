@@ -34,9 +34,13 @@ class FlexiGeneratorController extends Controller
 
         // Increment usage
         $user->increment('flexi_cuts_count');
+        
+        $usage = $user->getPlanUsage('flexi_cuts');
 
         return response()->json([
             'allowed' => true,
+            'current' => $usage['current'],
+            'limit' => $usage['limit'],
         ]);
     }
 
