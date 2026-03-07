@@ -107,12 +107,42 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
                 @foreach($products as $product)
                     <div class="group bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 store-card-hover flex flex-col h-full transform" id="product-card-{{ $product->id }}">
-                        <div class="store-img-bg relative aspect-[4/3] w-full flex items-center justify-center overflow-hidden p-6">
-                            @if($product->image_path)
-                                <img src="{{ $product->thumbnail_url }}" 
-                                     alt="{{ $product->name }}" 
-                                     loading="lazy"
-                                     class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 relative z-0">
+                        <div class="store-img-bg relative aspect-[4/3] w-full flex items-center justify-center overflow-hidden">
+                            @php
+                                $allImages = $product->all_image_urls;
+                                $imageCount = count($allImages);
+                            @endphp
+
+                            @if($imageCount > 0)
+                                <div class="w-full h-full relative" data-carousel="{{ $product->id }}">
+                                    @foreach($allImages as $imgIndex => $imgUrl)
+                                        <img src="{{ $imgUrl }}" 
+                                             alt="{{ $product->name }}" 
+                                             loading="lazy"
+                                             referrerpolicy="no-referrer"
+                                             class="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 {{ $imgIndex === 0 ? 'opacity-100' : 'opacity-0 pointer-events-none' }}"
+                                             data-slide="{{ $imgIndex }}">
+                                    @endforeach
+
+                                    @if($imageCount > 1)
+                                        {{-- Left Arrow --}}
+                                        <button type="button" onclick="event.stopPropagation(); carouselPrev({{ $product->id }}, {{ $imageCount }})" 
+                                                class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 backdrop-blur-sm">
+                                            <i class="fas fa-chevron-left text-xs"></i>
+                                        </button>
+                                        {{-- Right Arrow --}}
+                                        <button type="button" onclick="event.stopPropagation(); carouselNext({{ $product->id }}, {{ $imageCount }})" 
+                                                class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 backdrop-blur-sm">
+                                            <i class="fas fa-chevron-right text-xs"></i>
+                                        </button>
+                                        {{-- Dots --}}
+                                        <div class="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                                            @for($d = 0; $d < $imageCount; $d++)
+                                                <span class="w-1.5 h-1.5 rounded-full transition-all duration-200 {{ $d === 0 ? 'bg-white w-3' : 'bg-white/50' }}" data-dot="{{ $product->id }}-{{ $d }}"></span>
+                                            @endfor
+                                        </div>
+                                    @endif
+                                </div>
                             @else
                                 <i class="fas fa-cube text-5xl text-store-primary opacity-50 group-hover:scale-110 transition-transform duration-500"></i>
                             @endif
@@ -174,6 +204,69 @@
             @endif
 
             <script>
+                // Carousel state: { productId: currentIndex }
+                const carouselState = {};
+
+                function carouselGoTo(productId, total, index) {
+                    const container = document.querySelector(`[data-carousel="${productId}"]`);
+                    if (!container) return;
+
+                    const slides = container.querySelectorAll('[data-slide]');
+                    slides.forEach((slide, i) => {
+                        if (i === index) {
+                            slide.classList.remove('opacity-0', 'pointer-events-none');
+                            slide.classList.add('opacity-100');
+                        } else {
+                            slide.classList.add('opacity-0', 'pointer-events-none');
+                            slide.classList.remove('opacity-100');
+                        }
+                    });
+
+                    // Update dots
+                    for (let d = 0; d < total; d++) {
+                        const dot = document.querySelector(`[data-dot="${productId}-${d}"]`);
+                        if (dot) {
+                            if (d === index) {
+                                dot.classList.add('bg-white', 'w-3');
+                                dot.classList.remove('bg-white/50');
+                            } else {
+                                dot.classList.remove('bg-white', 'w-3');
+                                dot.classList.add('bg-white/50');
+                            }
+                        }
+                    }
+
+                    carouselState[productId] = index;
+                }
+
+                function carouselNext(productId, total) {
+                    const current = carouselState[productId] || 0;
+                    carouselGoTo(productId, total, (current + 1) % total);
+                }
+
+                function carouselPrev(productId, total) {
+                    const current = carouselState[productId] || 0;
+                    carouselGoTo(productId, total, (current - 1 + total) % total);
+                }
+
+                // Touch swipe support
+                document.querySelectorAll('[data-carousel]').forEach(container => {
+                    let startX = 0;
+                    const productId = container.dataset.carousel;
+                    const total = container.querySelectorAll('[data-slide]').length;
+
+                    container.addEventListener('touchstart', e => {
+                        startX = e.touches[0].clientX;
+                    }, { passive: true });
+
+                    container.addEventListener('touchend', e => {
+                        const diff = startX - e.changedTouches[0].clientX;
+                        if (Math.abs(diff) > 40) {
+                            diff > 0 ? carouselNext(productId, total) : carouselPrev(productId, total);
+                        }
+                    }, { passive: true });
+                });
+
                 function updateProduct(productId, productName, phone) {
                     const select = document.getElementById('var-' + productId);
                     const option = select.options[select.selectedIndex];

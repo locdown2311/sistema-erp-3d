@@ -26,6 +26,11 @@ class Product extends Model
         return $this->hasMany(ProductVariation::class);
     }
 
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -62,5 +67,27 @@ class Product extends Model
             return $this->image_path . '/thumbnail';
         }
         return $this->image_url;
+    }
+
+    /**
+     * Get all image URLs (main + extras) for carousel display.
+     */
+    public function getAllImageUrlsAttribute(): array
+    {
+        $urls = [];
+
+        // Main image first
+        if ($this->thumbnail_url) {
+            $urls[] = $this->thumbnail_url;
+        }
+
+        // Extra images
+        foreach ($this->images as $img) {
+            if ($img->thumbnail_url) {
+                $urls[] = $img->thumbnail_url;
+            }
+        }
+
+        return $urls;
     }
 }

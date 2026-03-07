@@ -72,25 +72,25 @@
         </div>
     </div>
 
-    <!-- Platform Stats / Trust Strip -->
+    <!-- Platform Features Strip -->
     <div class="border-y border-zinc-200/50 dark:border-white/5 bg-white/30 dark:bg-[#09090b]/50 backdrop-blur-md py-8 z-10 relative">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-zinc-200/50 dark:divide-zinc-800/50">
                 <div class="flex flex-col items-center">
-                    <span class="text-3xl font-black text-zinc-900 dark:text-white mb-1"><i class="fas fa-users text-emerald-500 mr-2"></i>100+</span>
-                    <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Makers Ativos</span>
+                    <span class="text-3xl font-black text-zinc-900 dark:text-white mb-1"><i class="fas fa-chart-line text-emerald-500 mr-2"></i>ERP</span>
+                    <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Gestão Completa</span>
                 </div>
                 <div class="flex flex-col items-center">
-                    <span class="text-3xl font-black text-zinc-900 dark:text-white mb-1"><i class="fas fa-boxes text-emerald-500 mr-2"></i>5k+</span>
-                    <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Produtos Cadastrados</span>
+                    <span class="text-3xl font-black text-zinc-900 dark:text-white mb-1"><i class="fas fa-store text-emerald-500 mr-2"></i>Grátis</span>
+                    <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Crie sua Loja</span>
                 </div>
                 <div class="flex flex-col items-center">
-                    <span class="text-3xl font-black text-zinc-900 dark:text-white mb-1"><i class="fas fa-star text-emerald-500 mr-2"></i>4.9</span>
-                    <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Avaliação Média</span>
+                    <span class="text-3xl font-black text-zinc-900 dark:text-white mb-1"><i class="fas fa-lock text-emerald-500 mr-2"></i>HTTPS</span>
+                    <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Conexão Segura</span>
                 </div>
                 <div class="flex flex-col items-center">
-                    <span class="text-3xl font-black text-zinc-900 dark:text-white mb-1"><i class="fas fa-shield-alt text-emerald-500 mr-2"></i>100%</span>
-                    <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Compra Segura</span>
+                    <span class="text-3xl font-black text-zinc-900 dark:text-white mb-1"><i class="fas fa-shield-alt text-emerald-500 mr-2"></i>LGPD</span>
+                    <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Dados Protegidos</span>
                 </div>
             </div>
         </div>
@@ -209,8 +209,67 @@
         </div>
         
         <!-- Footer -->
-        <footer class="mt-20 pt-10 border-t border-zinc-200/50 dark:border-white/5 text-center text-sm font-medium text-zinc-500 dark:text-zinc-400">
-            &copy; {{ date('Y') }} Central3D. Todos os direitos reservados.
+        <footer class="mt-20 pt-12 border-t border-zinc-200/50 dark:border-white/5">
+            <!-- Top Section: Brand + Nav Links -->
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 pb-10">
+                <!-- Brand Column -->
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-3 text-2xl font-black tracking-tight text-zinc-900 dark:text-white">
+                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-500/25">
+                            <i class="fas fa-cube text-base"></i>
+                        </div>
+                        Central<span class="text-emerald-500">3D</span>
+                    </div>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-xs">
+                        O Marketplace da Impressão 3D.<br>
+                        Conectando makers e compradores.
+                    </p>
+                </div>
+                <!-- Nav Links -->
+                <nav class="flex flex-wrap items-center gap-x-8 gap-y-3 text-sm font-semibold text-zinc-600 dark:text-zinc-300">
+                    <a href="#lojas" class="hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors">Lojas</a>
+                    <a href="#ofertas" class="hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors">Ofertas</a>
+                    @auth
+                        <a href="{{ route('plans.index') }}" class="hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors">Planos</a>
+                    @endauth
+                    <a href="{{ route('legal.terms') }}" class="hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors">Termos de Uso</a>
+                    <a href="{{ route('legal.privacy') }}" class="hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors">Privacidade</a>
+                    <a href="{{ route('modeler-requests.create') }}" class="hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors">Modeladores</a>
+                    @guest
+                        <a href="{{ route('register') }}" class="hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors">Criar Loja</a>
+                        <a href="{{ route('login') }}" class="hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors">Entrar</a>
+                    @endguest
+                </nav>
+            </div>
+
+            <!-- Bottom Trust Bar -->
+            <div class="border-t border-zinc-200/50 dark:border-white/5 py-5 flex flex-col md:flex-row items-center justify-between gap-4">
+                <span class="text-xs font-medium text-zinc-400 dark:text-zinc-500">
+                    &copy; {{ date('Y') }} Central3D &mdash; Todos os direitos reservados
+                </span>
+                <div class="flex flex-wrap items-center justify-center gap-3">
+                    <!-- HTTPS Badge -->
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/60 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold">
+                        <i class="fas fa-lock text-[10px]"></i>
+                        Conexão Segura HTTPS
+                    </span>
+                    <!-- LGPD Badge -->
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-teal-50 dark:bg-teal-500/10 border border-teal-200/60 dark:border-teal-500/20 text-teal-700 dark:text-teal-400 text-[11px] font-semibold">
+                        <i class="fas fa-shield-alt text-[10px]"></i>
+                        Conforme LGPD · Lei 13.709/2018
+                    </span>
+                    <!-- CNPJ Badge -->
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200/60 dark:border-amber-500/20 text-amber-700 dark:text-amber-400 text-[11px] font-semibold">
+                        <i class="fas fa-building text-[10px]"></i>
+                        CNPJ 65.490.660/0001-43 · MEI Ativo
+                    </span>
+                    <!-- Safe Browsing Badge -->
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/60 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold">
+                        <i class="fas fa-check-circle text-[10px]"></i>
+                        Google Safe Browsing
+                    </span>
+                </div>
+            </div>
         </footer>
     </div>
 </div>

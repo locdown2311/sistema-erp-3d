@@ -34,8 +34,41 @@
             </div>
 
             <div class="mb-5">
-                <x-image-upload :current-image="$product->image_path" :image-url="$product->thumbnail_url" />
-            </div>
+            <x-image-upload :current-image="$product->image_path" :image-url="$product->thumbnail_url" />
+        </div>
+
+        <div class="mb-5">
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Imagens Adicionais</label>
+            
+            @if($product->images->count() > 0)
+                <div class="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-3">
+                    @foreach($product->images as $img)
+                        <div class="relative group">
+                            <div class="aspect-square rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800">
+                                <img src="{{ $img->thumbnail_url }}" alt="Extra" class="w-full h-full object-cover" loading="lazy" referrerpolicy="no-referrer">
+                            </div>
+                            <label class="absolute top-1.5 right-1.5 cursor-pointer" title="Marcar para remover">
+                                <input type="checkbox" name="delete_images[]" value="{{ $img->id }}" class="sr-only peer">
+                                <div class="w-6 h-6 rounded-md bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border border-zinc-300 dark:border-zinc-600 flex items-center justify-center text-transparent peer-checked:bg-red-500 peer-checked:border-red-500 peer-checked:text-white transition-all">
+                                    <i class="fas fa-times text-xs"></i>
+                                </div>
+                            </label>
+                        </div>
+                    @endforeach
+                </div>
+                <p class="text-xs text-zinc-500 mb-3">Marque o <strong>X</strong> nas imagens que deseja remover.</p>
+            @endif
+
+            <input type="file" name="extra_images[]" multiple accept="image/*" class="w-full text-sm text-zinc-500 dark:text-zinc-400
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-l-lg file:border-0
+                file:text-sm file:font-medium
+                file:bg-indigo-50 file:text-indigo-700
+                dark:file:bg-indigo-500/10 dark:file:text-indigo-400
+                hover:file:bg-indigo-100 dark:hover:file:bg-indigo-500/20
+                border border-zinc-300 dark:border-zinc-800 rounded-lg bg-zinc-50 dark:bg-zinc-950 cursor-pointer transition-colors">
+            <p class="mt-1 text-xs text-zinc-500">Adicionar mais fotos (até 5 no total).</p>
+        </div>
 
             <div class="mb-5">
                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">Descrição</label>

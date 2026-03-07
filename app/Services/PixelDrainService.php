@@ -34,9 +34,11 @@ class PixelDrainService
             throw new \InvalidArgumentException('Disallowed file type: ' . $mimeType);
         }
 
+        $apiKey = config('services.pixeldrain.key');
+        $http = $apiKey ? Http::withBasicAuth('', $apiKey) : Http::after(function () {});
+
         // Prepare a multipart request
-        $response = Http::withBasicAuth('', config('services.pixeldrain.key'))
-            ->attach('file', $imageData, $filename)
+        $response = $http->attach('file', $imageData, $filename)
             ->post('https://pixeldrain.com/api/file');
 
         if ($response->successful()) {
@@ -55,8 +57,10 @@ class PixelDrainService
      */
     public function uploadFile(UploadedFile $file): ?string
     {
-        $response = Http::withBasicAuth('', config('services.pixeldrain.key'))
-            ->attach('file', file_get_contents($file->getRealPath()), $file->getClientOriginalName())
+        $apiKey = config('services.pixeldrain.key');
+        $http = $apiKey ? Http::withBasicAuth('', $apiKey) : Http::after(function () {});
+
+        $response = $http->attach('file', file_get_contents($file->getRealPath()), $file->getClientOriginalName())
             ->post('https://pixeldrain.com/api/file');
 
         if ($response->successful()) {

@@ -24,6 +24,10 @@ use App\Http\Controllers\FlexiGeneratorController;
 // Página Inicial Pública (Marketplace Hub)
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+// Páginas Legais
+Route::view('termos-de-uso', 'legal.terms')->name('legal.terms');
+Route::view('politica-de-privacidade', 'legal.privacy')->name('legal.privacy');
+
 // Rotas de Pedido de Modelagem (públicas)
 Route::get('procurar-modelador', [ModelerRequestController::class, 'create'])->name('modeler-requests.create');
 Route::post('procurar-modelador', [ModelerRequestController::class, 'store'])->name('modeler-requests.store');

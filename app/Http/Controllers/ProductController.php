@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\ProductVariation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -60,6 +61,8 @@ class ProductController extends Controller
             'base_cost' => 'required|numeric|min:0',
             'print_time_hours' => 'nullable|numeric|min:0',
             'weight_grams' => 'nullable|numeric|min:0',
+            'extra_images' => 'nullable|array|max:5',
+            'extra_images.*' => 'file|mimes:jpeg,png,jpg,gif,webp|max:20480',
         ]);
 
         $validated['user_id'] = auth()->id();
@@ -71,14 +74,27 @@ class ProductController extends Controller
             $data = explode(',', $request->cropped_image, 2);
             $imageData = base64_decode($data[1] ?? $data[0]);
             $localPath = 'products/' . uniqid() . '.jpg';
-            \Illuminate\Support\Facades\Storage::disk('public')->put($localPath, $imageData);
+            Storage::disk('public')->put($localPath, $imageData);
             $validated['image_path'] = $localPath;
         } elseif ($request->hasFile('image')) {
             $localPath = $request->file('image')->store('products', 'public');
             $validated['image_path'] = $localPath;
         }
 
+        unset($validated['extra_images']);
         $product = Product::create($validated);
+
+        // Save extra images
+        if ($request->hasFile('extra_images')) {
+            foreach ($request->file('extra_images') as $index => $file) {
+                $path = $file->store('products/extras', 'public');
+                $productImage = $product->images()->create([
+                    'image_path' => $path,
+                    'sort_order' => $index,
+                ]);
+                \App\Jobs\UploadImageToPixelDrain::dispatch($productImage, $path, 'image_path');
+            }
+        }
 
         return redirect()->route('products.index')
             ->with('success', 'Produto criado com sucesso!');
@@ -87,14 +103,14 @@ class ProductController extends Controller
     public function show(Product $product)
     {
         $this->authorizeProduct($product);
-        $product->load('variations', 'stockMovements', 'printCosts');
+        $product->load('variations', 'stockMovements', 'printCosts', 'images');
         return view('products.show', compact('product'));
     }
 
     public function edit(Product $product)
     {
         $this->authorizeProduct($product);
-        $product->load('variations');
+        $product->load('variations', 'images');
         $categories = Product::where('user_id', auth()->id())->distinct()->whereNotNull('category')->pluck('category');
         return view('products.edit', compact('product', 'categories'));
     }
@@ -111,6 +127,10 @@ class ProductController extends Controller
             'base_cost' => 'required|numeric|min:0',
             'print_time_hours' => 'nullable|numeric|min:0',
             'weight_grams' => 'nullable|numeric|min:0',
+            'extra_images' => 'nullable|array|max:5',
+            'extra_images.*' => 'file|mimes:jpeg,png,jpg,gif,webp|max:20480',
+            'delete_images' => 'nullable|array',
+            'delete_images.*' => 'integer|exists:product_images,id',
         ]);
 
         $validated['print_time_hours'] = $validated['print_time_hours'] ?? 0;
@@ -121,14 +141,35 @@ class ProductController extends Controller
             $data = explode(',', $request->cropped_image, 2);
             $imageData = base64_decode($data[1] ?? $data[0]);
             $localPath = 'products/' . uniqid() . '.jpg';
-            \Illuminate\Support\Facades\Storage::disk('public')->put($localPath, $imageData);
+            Storage::disk('public')->put($localPath, $imageData);
             $validated['image_path'] = $localPath;
         } elseif ($request->hasFile('image')) {
             $localPath = $request->file('image')->store('products', 'public');
             $validated['image_path'] = $localPath;
         }
 
+        // Delete selected extra images
+        if ($request->filled('delete_images')) {
+            ProductImage::where('product_id', $product->id)
+                ->whereIn('id', $request->delete_images)
+                ->delete();
+        }
+
+        // Add new extra images
+        if ($request->hasFile('extra_images')) {
+            $currentCount = $product->images()->count();
+            foreach ($request->file('extra_images') as $index => $file) {
+                $path = $file->store('products/extras', 'public');
+                $productImage = $product->images()->create([
+                    'image_path' => $path,
+                    'sort_order' => $currentCount + $index,
+                ]);
+                \App\Jobs\UploadImageToPixelDrain::dispatch($productImage, $path, 'image_path');
+            }
+        }
+
         $validated['active'] = $request->has('active');
+        unset($validated['extra_images'], $validated['delete_images']);
         $product->update($validated);
 
         return redirect()->route('products.index')

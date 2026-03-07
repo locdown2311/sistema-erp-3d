@@ -25,32 +25,39 @@ class ModelerRequestController extends Controller
             'email' => 'required|email|max:255',
             'whatsapp' => 'nullable|string|max:20',
             'description' => 'required|string',
-            'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp,bmp,tiff,heic,heif,pdf|max:20480', // 20MB max
+            'images' => 'nullable|array|max:5',
+            'images.*' => 'file|mimes:jpeg,png,jpg,gif,svg,webp,bmp,tiff,heic,heif,pdf|max:20480',
             'budget_range' => 'required|string|max:50',
         ], [
-            'image.max' => 'O arquivo é muito grande. O tamanho máximo permitido é de 2MB.',
-            'image.mimes' => 'Formato não suportado. Envie imagens ou PDF.',
-            'image.uploaded' => 'Falha ao carregar o arquivo. O arquivo excedeu o limite do servidor (2MB) ou a conexão caiu.',
+            'images.max' => 'Você pode enviar no máximo 5 arquivos.',
+            'images.*.max' => 'Cada arquivo pode ter no máximo 20MB.',
+            'images.*.mimes' => 'Formato não suportado. Envie imagens ou PDF.',
+            'images.*.uploaded' => 'Falha ao carregar o arquivo. O arquivo excedeu o limite do servidor ou a conexão caiu.',
         ]);
 
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $imagePath = 'modeler_requests/pedido_' . uniqid() . '.' . $request->file('image')->getClientOriginalExtension();
-            \Illuminate\Support\Facades\Storage::disk('public')->put($imagePath, file_get_contents($request->file('image')));
+        $imagePaths = [];
+
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $file) {
+                $path = 'modeler_requests/pedido_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                \Illuminate\Support\Facades\Storage::disk('public')->put($path, file_get_contents($file));
+                $imagePaths[] = $path;
+            }
         }
 
         $modelerRequest = ModelerRequest::create([
-            'user_id' => auth()->id(), // null if guest
+            'user_id' => auth()->id(),
             'name' => $validated['name'],
             'email' => $validated['email'],
             'whatsapp' => $validated['whatsapp'] ?? null,
             'description' => $validated['description'],
-            'image_path' => $imagePath,
+            'image_path' => !empty($imagePaths) ? $imagePaths : null,
             'budget_range' => $validated['budget_range'],
         ]);
 
-        if ($imagePath) {
-            \App\Jobs\UploadImageToPixelDrain::dispatch($modelerRequest, $imagePath, 'image_path');
+        // Dispatch PixelDrain upload for each image
+        foreach ($imagePaths as $index => $path) {
+            \App\Jobs\UploadImageToPixelDrain::dispatch($modelerRequest, $path, 'image_path', $index);
         }
 
         return redirect()->route('home')->with('success', 'Sua solicitação foi enviada com sucesso! Um modelador entrará em contato em breve.');

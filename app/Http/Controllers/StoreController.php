@@ -16,7 +16,7 @@ class StoreController extends Controller
 
         $products = Product::where('user_id', $store->id)
             ->where('active', true)
-            ->with('variations')
+            ->with('variations', 'images')
             ->orderBy('name')
             ->paginate(24)
             ->withQueryString();

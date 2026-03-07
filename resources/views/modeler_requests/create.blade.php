@@ -77,9 +77,9 @@
                             </div>
 
                             <div>
-                                <label for="image" class="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Arquivo de Referência <span class="text-zinc-400 text-xs font-normal">(opcional, max 20MB)</span></label>
+                                <label class="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Imagens de Referência <span class="text-zinc-400 text-xs font-normal">(até 5, max 20MB cada)</span></label>
                                 <div class="relative w-full">
-                                    <input type="file" name="image" id="image" accept="image/*,.pdf,.heic,.heif,.tiff" class="w-full text-sm text-zinc-500 dark:text-zinc-400
+                                    <input type="file" name="images[]" id="images" multiple accept="image/*,.pdf,.heic,.heif,.tiff" class="w-full text-sm text-zinc-500 dark:text-zinc-400
                                     file:mr-4 file:py-2.5 file:px-4
                                     file:rounded-l-xl file:border-0
                                     file:text-sm file:font-bold
@@ -89,8 +89,13 @@
                                     border border-zinc-300 dark:border-zinc-700 rounded-xl bg-white dark:bg-zinc-900 cursor-pointer transition-colors
                                     ">
                                 </div>
-                                <p class="mt-1.5 text-xs text-zinc-500">Ajuda muito os modeladores a entenderem a sua necessidade visualmente.</p>
-                                @error('image')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
+                                <p class="mt-1.5 text-xs text-zinc-500">Ajuda muito os modeladores a entenderem visualmente. Selecione até 5 arquivos.</p>
+                                @error('images')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
+                                @error('images.*')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
+
+                                <!-- Image Preview Area -->
+                                <div id="imagePreviewArea" class="mt-3 grid grid-cols-3 sm:grid-cols-5 gap-2 hidden">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -108,4 +113,55 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    const imageInput = document.getElementById('images');
+    const previewArea = document.getElementById('imagePreviewArea');
+
+    if (imageInput) {
+        imageInput.addEventListener('change', function() {
+            previewArea.innerHTML = '';
+            const files = Array.from(this.files);
+
+            if (files.length === 0) {
+                previewArea.classList.add('hidden');
+                return;
+            }
+
+            if (files.length > 5) {
+                alert('Você pode enviar no máximo 5 imagens. Apenas as 5 primeiras serão consideradas.');
+            }
+
+            previewArea.classList.remove('hidden');
+
+            files.slice(0, 5).forEach((file, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'relative aspect-square rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800';
+
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        wrapper.innerHTML = `
+                            <img src="${e.target.result}" class="w-full h-full object-cover" alt="Preview ${index + 1}">
+                            <div class="absolute bottom-0 inset-x-0 bg-black/50 text-white text-[10px] font-bold text-center py-0.5">${index + 1}</div>
+                        `;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    wrapper.innerHTML = `
+                        <div class="w-full h-full flex flex-col items-center justify-center text-zinc-400 gap-1">
+                            <i class="fas fa-file text-xl"></i>
+                            <span class="text-[10px] font-bold">${file.name.split('.').pop().toUpperCase()}</span>
+                        </div>
+                        <div class="absolute bottom-0 inset-x-0 bg-black/50 text-white text-[10px] font-bold text-center py-0.5">${index + 1}</div>
+                    `;
+                }
+
+                previewArea.appendChild(wrapper);
+            });
+        });
+    }
+</script>
 @endsection
