@@ -123,7 +123,7 @@ const showPremiumAlert = () => {
                 <i class="fas fa-cash-register w-5 text-center"></i>
                 <span>Vendas</span>
             </a>
-            <a href="/custos-3d" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white" :class="{ 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium': $page.url.startsWith('/custos-3d') }">
+            <a href="/custos" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white" :class="{ 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium': $page.url.startsWith('/custos') }">
                 <i class="fas fa-calculator w-5 text-center"></i>
                 <span>Custos 3D</span>
             </a>

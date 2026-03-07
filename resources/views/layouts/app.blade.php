@@ -73,7 +73,7 @@
             </a>
             <a href="{{ route('costs.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white {{ request()->routeIs('costs.*') ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium' : '' }}">
                 <i class="fas fa-calculator w-5 text-center"></i>
-                <span>Custos 3D</span>
+                <span>Custos</span>
             </a>
             <a href="{{ route('flexi-generator.index') }}" class="group relative flex items-center justify-between px-3 py-2.5 rounded-md overflow-hidden transition-all duration-300 {{ request()->routeIs('flexi-generator.*') ? 'bg-indigo-50 dark:bg-indigo-500/10' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800' }}">
                 <div class="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-l-md opacity-0 group-hover:opacity-100 transition-opacity {{ request()->routeIs('flexi-generator.*') ? 'opacity-100' : '' }}"></div>

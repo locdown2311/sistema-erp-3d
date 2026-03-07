@@ -6,6 +6,7 @@ use App\Models\PrintCost;
 use App\Models\Product;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class CostController extends Controller
 {
@@ -24,7 +25,11 @@ class CostController extends Controller
             'labor_rate' => Setting::get('labor_rate', '20.00'),
         ];
 
-        return view('costs.index', compact('products', 'costs', 'defaults'));
+        return Inertia::render('Costs/Index', [
+            'products' => $products,
+            'costs' => $costs,
+            'defaults' => $defaults,
+        ]);
     }
 
     public function calculate(Request $request)
