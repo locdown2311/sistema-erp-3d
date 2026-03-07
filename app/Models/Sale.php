@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class Sale extends Model
 {
     protected $fillable = [
-        'user_id', 'customer_name', 'total', 'notes', 'sale_date', 'status', 'tracking_code', 'shipping_status'
+        'user_id', 'customer_id', 'customer_name', 'total', 'notes', 'sale_date', 'status', 'tracking_code', 'shipping_status'
     ];
 
     protected $casts = [
@@ -19,5 +21,10 @@ class Sale extends Model
     public function items(): HasMany
     {
         return $this->hasMany(SaleItem::class);
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
     }
 }

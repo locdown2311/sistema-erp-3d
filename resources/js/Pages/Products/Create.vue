@@ -40,7 +40,7 @@ const submit = () => {
         <Head title="Novo Produto" />
         <template #header>Novo Produto</template>
 
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm overflow-hidden max-w-3xl mb-6">
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm overflow-hidden max-w-4xl mb-6 mx-auto sm:mt-6">
             <div class="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/50">
                 <h3 class="text-lg font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
                     <i class="fas fa-plus-circle text-indigo-500"></i> Cadastrar Produto

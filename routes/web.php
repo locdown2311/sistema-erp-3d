@@ -52,6 +52,12 @@ Route::get('loja/{slug}/oferta-recente', [StoreController::class, 'latestOffer']
 Route::middleware('auth')->group(function () {
     Route::get('/painel', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Clientes
+    Route::resource('clientes', \App\Http\Controllers\CustomerController::class)
+        ->names('customers')
+        ->parameters(['clientes' => 'customer'])
+        ->except(['create', 'edit', 'show']);
+
     // NFe - Protótipo
     Route::get('nfe', [\App\Http\Controllers\NFeController::class, 'index'])->name('nfe.index');
     Route::post('nfe/emitir', [\App\Http\Controllers\NFeController::class, 'emit'])->name('nfe.emit');
@@ -87,6 +93,7 @@ Route::middleware('auth')->group(function () {
     Route::get('custos', [CostController::class, 'index'])->name('costs.index');
     Route::post('custos/calcular', [CostController::class, 'calculate'])->name('costs.calculate');
     Route::post('custos', [CostController::class, 'store'])->name('costs.store');
+    Route::delete('custos/{cost}', [CostController::class, 'destroy'])->name('costs.destroy');
 
     // Pedidos de Modelagem (autenticado)
     Route::get('pedidos-modelagem', [ModelerRequestController::class, 'index'])->name('modeler-requests.index');

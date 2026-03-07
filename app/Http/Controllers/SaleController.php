@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Inertia\Inertia;
 
 class SaleController extends Controller
 {
@@ -28,7 +29,11 @@ class SaleController extends Controller
         $sales = $query->orderBy('sale_date', 'desc')->paginate(15);
         $canExportReports = auth()->user()->currentPlan()?->can_export_reports ?? false;
         
-        return view('sales.index', compact('sales', 'canExportReports'));
+        return Inertia::render('Sales/Index', [
+            'sales' => $sales,
+            'filters' => $request->only(['status', 'date_from', 'date_to']),
+            'canExportReports' => $canExportReports
+        ]);
     }
 
     public function reportPdf(Request $request)
@@ -93,7 +98,11 @@ class SaleController extends Controller
     public function create()
     {
         $products = Product::where('user_id', auth()->id())->where('active', true)->with('variations')->orderBy('name')->get();
-        return view('sales.create', compact('products'));
+        $customers = auth()->user()->customers()->orderBy('name')->get();
+        return Inertia::render('Sales/Create', [
+            'products' => $products,
+            'customers' => $customers
+        ]);
     }
 
     public function store(Request $request)
@@ -107,7 +116,7 @@ class SaleController extends Controller
         }
 
         $validated = $request->validate([
-            'customer_name' => 'nullable|string|max:255',
+            'customer_id' => 'required|exists:customers,id',
             'sale_date' => 'required|date',
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
@@ -119,10 +128,13 @@ class SaleController extends Controller
         ]);
 
         $total = collect($validated['items'])->sum(fn($item) => $item['quantity'] * $item['unit_price']);
+        
+        $customer = auth()->user()->customers()->findOrFail($validated['customer_id']);
 
         $sale = Sale::create([
             'user_id' => auth()->id(),
-            'customer_name' => $validated['customer_name'],
+            'customer_id' => $customer->id,
+            'customer_name' => $customer->name,
             'sale_date' => $validated['sale_date'],
             'notes' => $validated['notes'] ?? null,
             'total' => $total,
@@ -153,7 +165,9 @@ class SaleController extends Controller
     {
         if ($sale->user_id !== auth()->id()) abort(403);
         $sale->load('items.product', 'items.variation');
-        return view('sales.show', compact('sale'));
+        return Inertia::render('Sales/Show', [
+            'sale' => $sale
+        ]);
     }
 
     public function destroy(Sale $sale)

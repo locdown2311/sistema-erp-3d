@@ -9,6 +9,7 @@ const props = defineProps({
 });
 
 const form = useForm({
+    _method: 'put',
     name: props.product.name || '',
     category: props.product.category || '',
     description: props.product.description || '',
@@ -49,9 +50,7 @@ const toggleExtraImageDelete = (id) => {
 };
 
 const submit = () => {
-    // We must use POST with _method=PUT to send FormData correctly in Laravel
     form.post(`/produtos/${props.product.id}`, {
-        _method: 'put',
         preserveScroll: true,
     });
 };
@@ -81,7 +80,7 @@ const formatCurrency = (value) => {
         <Head title="Editar Produto" />
         <template #header>Editar Produto</template>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto sm:mt-6 px-4 sm:px-6 lg:px-8">
             <!-- Edit Form -->
             <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm overflow-hidden h-fit mb-6 lg:mb-0">
                 <div class="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/50">

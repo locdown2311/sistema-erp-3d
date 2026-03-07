@@ -190,7 +190,7 @@ const getProgressBarColor = (percent) => {
             </button>
         </template>
 
-        <div class="px-6 py-8">
+        <div class="w-full">
             <!-- Toolbar -->
             <div class="flex flex-col items-center justify-between gap-4 p-4 mb-6 transition-colors bg-white border shadow-sm sm:flex-row sm:p-5 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-xl">
                 <div class="relative flex-1 w-full max-w-md sm:w-auto">

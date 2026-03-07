@@ -115,7 +115,6 @@ const deleteCost = (id) => {
 <template>
     <AppLayout>
         <Head title="Custos 3D" />
-
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 xl:gap-8">
             <!-- Calculator -->
             <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm overflow-hidden h-fit">
@@ -269,9 +268,10 @@ const deleteCost = (id) => {
                         <i :class="form.processing ? 'fas fa-spinner fa-spin' : 'fas fa-save'"></i> Salvar Este Cálculo
                     </button>
                 </div>
+            </div>
 
-                <!-- Saved Costs -->
-                <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm overflow-hidden flex-1 h-fit">
+            <!-- Saved Costs -->
+            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm overflow-hidden flex-1 h-fit">
                     <div class="px-5 sm:px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
                         <h3 class="font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
                             <i class="fas fa-history text-zinc-400"></i> Cálculos Salvos
@@ -299,6 +299,5 @@ const deleteCost = (id) => {
                     </div>
                 </div>
             </div>
-        </div>
     </AppLayout>
 </template>

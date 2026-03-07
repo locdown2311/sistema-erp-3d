@@ -37,6 +37,7 @@ class User extends Authenticatable
     public function printCosts() { return $this->hasMany(PrintCost::class); }
     public function subscriptions() { return $this->hasMany(Subscription::class); }
     public function wishlists() { return $this->hasMany(Wishlist::class); }
+    public function customers() { return $this->hasMany(Customer::class); }
 
     /**
      * Retorna o plano atual do usuário.

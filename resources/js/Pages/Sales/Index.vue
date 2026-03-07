@@ -59,7 +59,7 @@ const showPremiumAlert = () => {
         </template>
 
         <!-- Filters Form -->
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 sm:p-5 shadow-sm mb-6">
+            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 sm:p-5 shadow-sm mb-6">
             <form @submit.prevent="applyFilters" class="flex flex-col sm:flex-row gap-4 items-end sm:items-center">
                 <div class="w-full sm:w-auto flex-1">
                     <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1.5">Status</label>

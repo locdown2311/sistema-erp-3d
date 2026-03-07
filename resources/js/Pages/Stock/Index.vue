@@ -66,7 +66,7 @@ const formatTimeAgo = (dateString) => {
 
         <template #header>Estoque</template>
 
-        <div class="px-6 py-8">
+        <div class="w-full">
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:gap-8">
                 
                 <!-- Stock Overview Left Column -->

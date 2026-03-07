@@ -185,7 +185,7 @@ onUnmounted(() => {
     <AppLayout>
         <Head title="Dashboard" />
 
-        <div class="px-6 py-8">
+        <div class="w-full">
             <!-- KPIs -->
             <div class="grid grid-cols-1 gap-4 mb-8 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
                 <div class="relative flex items-center gap-4 p-5 overflow-hidden transition-all bg-white border shadow-sm dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-xl hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md group">
