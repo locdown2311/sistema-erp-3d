@@ -13,6 +13,13 @@ const flashMessage = ref('');
 const flashType = ref('success');
 let flashTimeout;
 
+const showFlash = () => {
+    clearTimeout(flashTimeout);
+    flashTimeout = setTimeout(() => {
+        flashMessage.value = '';
+    }, 4000);
+};
+
 watch(() => page.props.flash, (flash) => {
     if (flash?.success) {
         flashMessage.value = flash.success;
@@ -24,13 +31,6 @@ watch(() => page.props.flash, (flash) => {
         showFlash();
     }
 }, { deep: true, immediate: true });
-
-const showFlash = () => {
-    clearTimeout(flashTimeout);
-    flashTimeout = setTimeout(() => {
-        flashMessage.value = '';
-    }, 4000);
-};
 
 const isSidebarOpen = ref(false);
 
