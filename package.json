@@ -18,6 +18,7 @@
         "@inertiajs/vue3": "^2.3.17",
         "@vitejs/plugin-vue": "^6.0.4",
         "@vue/server-renderer": "^3.5.29",
+        "chart.js": "^4.5.1",
         "cropperjs": "^1.6.2",
         "lodash": "^4.17.23",
         "three": "^0.183.2",

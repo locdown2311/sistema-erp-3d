@@ -7,6 +7,7 @@ use App\Models\Sale;
 use App\Models\Task;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
@@ -67,10 +68,19 @@ class DashboardController extends Controller
             'wishlists' => $user->getPlanUsage('wishlists'),
         ];
 
-        return view('dashboard.index', compact(
-            'totalProducts', 'totalSales', 'totalRevenue', 'pendingTasks',
-            'salesChart', 'recentSales', 'lowStock', 'upcomingTasks', 'modelerRequests', 'activeShippings',
-            'currentPlan', 'planUsage'
-        ));
+        return Inertia::render('Dashboard/Index', [
+            'totalProducts' => $totalProducts,
+            'totalSales' => $totalSales,
+            'totalRevenue' => $totalRevenue,
+            'pendingTasks' => $pendingTasks,
+            'salesChart' => $salesChart,
+            'recentSales' => $recentSales,
+            'lowStock' => collect($lowStock)->values(), // Reset keys for JSON array
+            'upcomingTasks' => $upcomingTasks,
+            'modelerRequests' => $modelerRequests,
+            'activeShippings' => $activeShippings,
+            'currentPlan' => $currentPlan,
+            'planUsage' => collect($planUsage) // Ensure object formatting over the wire
+        ]);
     }
 }

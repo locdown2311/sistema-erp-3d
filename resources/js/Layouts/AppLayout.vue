@@ -67,7 +67,7 @@ const showPremiumAlert = () => {
            :class="isSidebarOpen ? 'translate-x-0' : '-translate-x-full'">
         <div class="h-16 flex items-center justify-between px-6 border-b border-zinc-200 dark:border-zinc-800">
             <div class="flex items-center gap-3">
-                <img v-if="user.store_logo" :src="user.store_logo_thumbnail_url" alt="Logo" class="w-7 h-7 rounded object-cover">
+                <img v-if="user.store_logo_thumbnail_url || user.store_logo_url" :src="user.store_logo_thumbnail_url || user.store_logo_url" alt="Logo" class="w-7 h-7 rounded object-cover">
                 <i v-else class="fas fa-cube text-xl text-zinc-900 dark:text-zinc-100"></i>
                 <span class="font-bold text-zinc-900 dark:text-white truncate" style="max-width: 140px;">
                     {{ user.store_name || 'Central 3D' }}
