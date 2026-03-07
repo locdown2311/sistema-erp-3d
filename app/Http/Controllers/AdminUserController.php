@@ -65,6 +65,21 @@ class AdminUserController extends Controller
         return back()->with('success', "Plano de {$user->name} alterado para {$plan->name} com sucesso!");
     }
 
+    public function updateFlexiCuts(Request $request, User $user)
+    {
+        $this->authorizeAdmin();
+
+        $request->validate([
+            'flexi_cuts_count' => 'required|integer|min:0',
+        ]);
+
+        $user->update([
+            'flexi_cuts_count' => $request->flexi_cuts_count,
+        ]);
+
+        return back()->with('success', "Usos do Gerador Flexi de {$user->name} atualizados com sucesso!");
+    }
+
     public function suspend(Request $request, User $user)
     {
         $this->authorizeAdmin();

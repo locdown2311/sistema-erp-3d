@@ -113,6 +113,7 @@ Route::middleware('auth')->group(function () {
     // Admin: Gestão de Usuários
     Route::get('painel/usuarios', [AdminUserController::class, 'index'])->name('admin.users.index');
     Route::put('painel/usuarios/{user}/plano', [AdminUserController::class, 'updatePlan'])->name('admin.users.update-plan');
+    Route::put('painel/usuarios/{user}/flexi-cuts', [AdminUserController::class, 'updateFlexiCuts'])->name('admin.users.update-flexi-cuts');
     Route::put('painel/usuarios/{user}/suspender', [AdminUserController::class, 'suspend'])->name('admin.users.suspend');
     Route::put('painel/usuarios/{user}/reativar', [AdminUserController::class, 'unsuspend'])->name('admin.users.unsuspend');
     Route::delete('painel/usuarios/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');

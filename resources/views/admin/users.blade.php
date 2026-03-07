@@ -139,6 +139,11 @@
                             {{-- Actions --}}
                             <td class="px-5 py-4">
                                 <div class="flex items-center justify-end gap-2">
+                                    {{-- Flexi Usage Button --}}
+                                    <button type="button" onclick="openFlexiUsageModal({{ $user->id }}, '{{ addslashes($user->name) }}', {{ (int)$user->flexi_cuts_count }})" class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-400 dark:hover:bg-indigo-500/20 flex items-center justify-center transition-colors shadow-sm" title="Editar Limite Flexi">
+                                        <i class="fas fa-cube text-sm"></i>
+                                    </button>
+
                                     @if(!$user->is_admin && !$isCurrentUser)
                                         {{-- Suspend / Unsuspend --}}
                                         @if($isSuspended)
@@ -251,6 +256,35 @@
         </form>
     </div>
 </div>
+
+{{-- Flexi Usage Modal --}}
+<div id="flexiUsageModal" class="fixed inset-0 z-50 flex items-center justify-center hidden" aria-modal="true">
+    <div class="fixed inset-0 bg-zinc-900/80 backdrop-blur-sm" onclick="closeFlexiUsageModal()"></div>
+    <div class="relative bg-white dark:bg-zinc-900 rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden border border-zinc-200 dark:border-zinc-800">
+        <div class="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50">
+            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
+                <i class="fas fa-cube text-indigo-500"></i> Usos do Gerador Flexi
+            </h3>
+        </div>
+        <form id="flexiUsageForm" method="POST" action="">
+            @csrf
+            @method('PUT')
+            <div class="p-6">
+                <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+                    Altere a quantidade de cortes já utilizados por <strong id="flexiUserName" class="text-zinc-900 dark:text-white"></strong>.
+                </p>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Quantidade de Cortes Utilizados</label>
+                <input type="number" name="flexi_cuts_count" id="flexiCutsInput" min="0" required class="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm p-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none">
+            </div>
+            <div class="px-6 py-4 border-t border-zinc-200 dark:border-zinc-800 flex justify-end gap-3 bg-zinc-50 dark:bg-zinc-800/50">
+                <button type="button" onclick="closeFlexiUsageModal()" class="px-4 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">Cancelar</button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm">
+                    <i class="fas fa-save mr-1"></i> Salvar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
@@ -275,6 +309,18 @@
 
     function closeDeleteModal() {
         document.getElementById('deleteModal').classList.add('hidden');
+    }
+
+    function openFlexiUsageModal(userId, userName, currentUsage) {
+        document.getElementById('flexiUsageForm').action = `/painel/usuarios/${userId}/flexi-cuts`;
+        document.getElementById('flexiUserName').textContent = userName;
+        document.getElementById('flexiCutsInput').value = currentUsage;
+        document.getElementById('flexiUsageModal').classList.remove('hidden');
+        setTimeout(() => document.getElementById('flexiCutsInput').focus(), 100);
+    }
+
+    function closeFlexiUsageModal() {
+        document.getElementById('flexiUsageModal').classList.add('hidden');
     }
 </script>
 @endsection
