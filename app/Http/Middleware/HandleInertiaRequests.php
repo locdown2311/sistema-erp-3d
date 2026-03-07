@@ -57,6 +57,10 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $userData,
             ],
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
+            ],
             'csrf_token' => csrf_token(),
             'setting' => [
                 'company_name' => \App\Models\Setting::get('company_name', 'Central 3D'),

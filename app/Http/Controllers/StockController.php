@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class StockController extends Controller
 {
@@ -24,7 +25,10 @@ class StockController extends Controller
             ->take(20)
             ->get();
 
-        return view('stock.index', compact('products', 'movements'));
+        return Inertia::render('Stock/Index', [
+            'products' => $products,
+            'movements' => $movements,
+        ]);
     }
 
     public function store(Request $request)

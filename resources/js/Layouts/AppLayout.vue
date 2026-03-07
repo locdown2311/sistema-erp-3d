@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 
 // The auth user and global variables are typically passed via Inertia shared props.
@@ -7,6 +7,30 @@ import { Link, usePage } from '@inertiajs/vue3';
 const page = usePage();
 const user = page.props.auth?.user;
 const companyName = page.props.setting?.company_name || 'Central 3D';
+
+// --- FLASH MESSAGES ---
+const flashMessage = ref('');
+const flashType = ref('success');
+let flashTimeout;
+
+watch(() => page.props.flash, (flash) => {
+    if (flash?.success) {
+        flashMessage.value = flash.success;
+        flashType.value = 'success';
+        showFlash();
+    } else if (flash?.error) {
+        flashMessage.value = flash.error;
+        flashType.value = 'error';
+        showFlash();
+    }
+}, { deep: true, immediate: true });
+
+const showFlash = () => {
+    clearTimeout(flashTimeout);
+    flashTimeout = setTimeout(() => {
+        flashMessage.value = '';
+    }, 4000);
+};
 
 const isSidebarOpen = ref(false);
 
@@ -212,4 +236,27 @@ const showPremiumAlert = () => {
             <slot />
         </div>
     </main>
+
+    <!-- Flash Messages -->
+    <Transition
+        enter-active-class="transform transition duration-300 ease-out"
+        enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
+        enter-to-class="translate-y-0 opacity-100 sm:translate-x-0"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+    >
+        <div v-if="flashMessage" class="fixed z-50 flex items-start gap-3 px-4 py-3 bg-white border shadow-xl bot-4 right-4 sm:bottom-6 sm:right-6 sm:top-auto dark:bg-zinc-800 rounded-xl border-zinc-200 dark:border-zinc-700 max-w-sm w-full">
+            <div class="flex-shrink-0 mt-0.5">
+                <i v-if="flashType === 'success'" class="text-xl text-emerald-500 fas fa-check-circle"></i>
+                <i v-else class="text-xl text-red-500 fas fa-exclamation-circle"></i>
+            </div>
+            <div class="flex-1 min-w-0 pt-0.5">
+                <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ flashMessage }}</p>
+            </div>
+            <button @click="flashMessage = ''" class="flex-shrink-0 pt-1 ml-4 transition-colors text-zinc-400 hover:text-zinc-500 dark:hover:text-zinc-300">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </Transition>
 </template>

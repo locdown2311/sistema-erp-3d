@@ -21,6 +21,10 @@ class Product extends Model
         'active' => 'boolean',
     ];
 
+    protected $appends = [
+        'current_stock',
+    ];
+
     public function variations(): HasMany
     {
         return $this->hasMany(ProductVariation::class);

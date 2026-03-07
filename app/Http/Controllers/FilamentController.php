@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Filament;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class FilamentController extends Controller
 {
@@ -22,7 +23,20 @@ class FilamentController extends Controller
         $filaments = $query->orderBy('name')->get();
         $types = Filament::where('user_id', auth()->id())->distinct()->pluck('type')->filter();
 
-        return view('filaments.index', compact('filaments', 'types'));
+        // Calculate remaining percentages safely
+        $filaments->each(function ($filament) {
+            if ($filament->weight_grams > 0) {
+                $filament->remaining_percent = min(100, max(0, ($filament->remaining_grams / $filament->weight_grams) * 100));
+            } else {
+                $filament->remaining_percent = 0;
+            }
+        });
+
+        return Inertia::render('Filaments/Index', [
+            'filaments' => $filaments,
+            'types' => $types->values(),
+            'filters' => $request->only(['search', 'type']),
+        ]);
     }
 
     public function store(Request $request)
