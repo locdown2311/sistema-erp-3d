@@ -21,6 +21,7 @@ use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\FlexiGeneratorController;
 
+
 // Página Inicial Pública (Marketplace Hub)
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
