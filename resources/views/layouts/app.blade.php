@@ -137,6 +137,10 @@
                 <i class="fas fa-cog w-5 text-center"></i>
                 <span>Configurações</span>
             </a>
+            <a href="{{ route('links.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white {{ request()->routeIs('links.*') ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium' : '' }}">
+                <i class="fas fa-link w-5 text-center text-blue-500"></i>
+                <span>Árvore de Links</span>
+            </a>
             
             <a href="{{ route('plans.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white {{ request()->routeIs('plans.*') ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium' : '' }}">
                 <i class="fas fa-star w-5 text-center text-amber-500"></i>

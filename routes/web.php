@@ -44,6 +44,7 @@ Route::post('sair', [LoginController::class, 'logout'])->name('logout')->middlew
 
 // Rotas públicas da loja (qualquer visitante)
 Route::get('loja/{slug}', [StoreController::class, 'show'])->name('store.show');
+Route::get('loja/{slug}/links', [StoreController::class, 'links'])->name('store.links');
 Route::get('loja/{slug}/ofertas', [StoreController::class, 'offers'])->name('store.offers');
 Route::get('loja/{slug}/produto/{product}', [StoreController::class, 'product'])->name('store.product');
 Route::get('loja/{slug}/oferta-recente', [StoreController::class, 'latestOffer'])->name('store.latest-offer');
@@ -113,6 +114,10 @@ Route::middleware('auth')->group(function () {
     // Configurações
     Route::get('configuracoes', [SettingController::class, 'index'])->name('settings.index');
     Route::post('configuracoes', [SettingController::class, 'update'])->name('settings.update');
+
+    // Links (Árvore de Links)
+    Route::post('links/reorder', [\App\Http\Controllers\StoreLinkController::class, 'updateOrder'])->name('links.reorder');
+    Route::resource('links', \App\Http\Controllers\StoreLinkController::class)->except(['create', 'edit', 'show']);
 
     // Admin: Gestão de Ofertas
     Route::resource('ofertas', OfferController::class)->names('offers')->parameters(['ofertas' => 'offer']);

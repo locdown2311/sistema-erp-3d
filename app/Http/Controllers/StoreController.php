@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Product;
-use App\Models\Offer;
+use App\Models\StoreLink;
 
 class StoreController extends Controller
 {
@@ -24,6 +24,23 @@ class StoreController extends Controller
         $isOwner = auth()->id() === $store->id;
 
         return view('store.index', compact('store', 'products', 'isOwner'));
+    }
+
+    public function links(string $slug)
+    {
+        $cacheKey = "store.{$slug}.links";
+        
+        list($store, $links) = \Illuminate\Support\Facades\Cache::remember($cacheKey, now()->addHours(6), function () use ($slug) {
+            $storeModel = User::where('slug', $slug)->firstOrFail();
+            $linksList = StoreLink::where('user_id', $storeModel->id)
+                ->where('is_active', true)
+                ->orderBy('order', 'asc')
+                ->orderBy('created_at', 'asc')
+                ->get();
+            return [$storeModel, $linksList];
+        });
+
+        return view('store.links', compact('store', 'links'));
     }
 
     public function offers(string $slug)
