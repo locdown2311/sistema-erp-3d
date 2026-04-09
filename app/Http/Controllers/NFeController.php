@@ -136,6 +136,8 @@ class NFeController extends Controller
             'dest_uf'            => 'required|string|size:2',
             'dest_ie'            => 'nullable|string|max:20',
             'dest_cmun'          => 'nullable|string',
+            'regime_tributario'  => 'required|string',
+            'is_draft'           => 'boolean',
             'prod_descricao'     => 'required|array|min:1',
             'prod_ncm'           => 'required|array',
             'prod_cfop'          => 'required|array',
@@ -211,13 +213,16 @@ class NFeController extends Controller
         $std->verProc    = 'Sys3D 1.0.0';
         $nfe->tagide($std);
 
+        $regime = $validated['regime_tributario'] ?? '1'; // 1=Simples, 2=MEI, 3=Normal
+
         // emitente
         $std = new stdClass();
         $std->xNome = $validated['emit_nome'];
         $std->xFant = $validated['emit_nome'];
         $std->IE    = preg_replace('/[^0-9]/', '', $validated['emit_ie']);
-        // CRT 1 = Simples Nacional
-        $std->CRT   = 1;
+        // CRT 1 = Simples Nacional, 2 = Simples Nacional (excesso de sublimite), 3 = Regime Normal
+        // We map MEI(2) frontend to CRT 1 as NFePHP expects CRT 1 for MEI.
+        $std->CRT   = ($regime === '3') ? 3 : 1; 
         $std->CNPJ  = preg_replace('/[^0-9]/', '', $validated['emit_cnpj']);
         $nfe->tagemit($std);
 
@@ -268,13 +273,17 @@ class NFeController extends Controller
         // ── Produtos e impostos ───────────────────────────────────
         $vbcGlobal     = 0.00;
         $vicmsGlobal   = 0.00;
+        $vipiGlobal    = 0.00;
         $vpisGlobal    = 0.00;
         $vcofinsGlobal = 0.00;
         $vprodGlobal   = 0.00;
 
         $pICMS   = (float) Setting::get('nfe_picms', 18);
+        $pIPI    = (float) Setting::get('nfe_pipi', 5);
         $pPIS    = (float) Setting::get('nfe_ppis', 1.65);
         $pCOFINS = (float) Setting::get('nfe_pcofins', 7.6);
+
+        $regime = $validated['regime_tributario'] ?? '1'; // 1=Simples, 2=MEI, 3=Normal
 
         foreach ($validated['prod_descricao'] as $index => $descricao) {
             $item  = $index + 1;
@@ -306,39 +315,89 @@ class NFeController extends Controller
             $std->item = $item;
             $nfe->tagimposto($std);
 
-            // ICMS (Simples Nacional - CSOSN 102 - Sem permissão de crédito)
-            $std = new stdClass();
-            $std->item  = $item;
-            $std->orig  = 0;
-            $std->CSOSN = '102';
-            $nfe->tagICMSSN($std);
+            if ($regime === '3') {
+                // REGIME NORMAL (Lucro Presumido / Real) - Destaque de impostos
+                
+                // ICMS (CST 00 - Tributada Integralmente)
+                $vIcms = ($vTot * $pICMS) / 100;
+                $std = new stdClass();
+                $std->item   = $item;
+                $std->orig   = 0;
+                $std->CST    = '00';
+                $std->modBC  = 3; // Valor da operação
+                $std->vBC    = number_format($vTot, 2, '.', '');
+                $std->pICMS  = number_format($pICMS, 4, '.', '');
+                $std->vICMS  = number_format($vIcms, 2, '.', '');
+                $nfe->tagICMS($std);
 
-            // PIS
-            $vPis = ($vTot * $pPIS) / 100;
-            $std = new stdClass();
-            $std->item = $item;
-            $std->CST  = '01';
-            $std->vBC  = number_format($vTot, 2, '.', '');
-            $std->pPIS = number_format($pPIS, 4, '.', '');
-            $std->vPIS = number_format($vPis, 2, '.', '');
-            $nfe->tagPIS($std);
+                // IPI (CST 50 - Saída Tributada)
+                $vIpi = ($vTot * $pIPI) / 100;
+                $std = new stdClass();
+                $std->item = $item;
+                $std->cEnq = '999'; // Outros (Padrão genérico)
+                $std->CST  = '50';
+                $std->vBC  = number_format($vTot, 2, '.', '');
+                $std->pIPI = number_format($pIPI, 4, '.', '');
+                $std->vIPI = number_format($vIpi, 2, '.', '');
+                $nfe->tagIPI($std);
 
-            // COFINS
-            $vCofins = ($vTot * $pCOFINS) / 100;
-            $std = new stdClass();
-            $std->item    = $item;
-            $std->CST     = '01';
-            $std->vBC     = number_format($vTot, 2, '.', '');
-            $std->pCOFINS = number_format($pCOFINS, 4, '.', '');
-            $std->vCOFINS = number_format($vCofins, 2, '.', '');
-            $nfe->tagCOFINS($std);
+                // PIS (CST 01 - Operação Tributável)
+                $vPis = ($vTot * $pPIS) / 100;
+                $std = new stdClass();
+                $std->item = $item;
+                $std->CST  = '01';
+                $std->vBC  = number_format($vTot, 2, '.', '');
+                $std->pPIS = number_format($pPIS, 4, '.', '');
+                $std->vPIS = number_format($vPis, 2, '.', '');
+                $nfe->tagPIS($std);
+
+                // COFINS (CST 01 - Operação Tributável)
+                $vCofins = ($vTot * $pCOFINS) / 100;
+                $std = new stdClass();
+                $std->item    = $item;
+                $std->CST     = '01';
+                $std->vBC     = number_format($vTot, 2, '.', '');
+                $std->pCOFINS = number_format($pCOFINS, 4, '.', '');
+                $std->vCOFINS = number_format($vCofins, 2, '.', '');
+                $nfe->tagCOFINS($std);
+
+                $vicmsGlobal   += $vIcms;
+                $vipiGlobal    += $vIpi;
+                $vpisGlobal    += $vPis;
+                $vcofinsGlobal += $vCofins;
+
+            } else {
+                // SIMPLES NACIONAL (1) ou MEI (2) - Sem destaque na nota padrão
+                
+                // ICMS (CSOSN 102 - Tributada pelo Simples Nacional sem permissão de crédito, ou CSOSN 400 - Não tributada/MEI)
+                $std = new stdClass();
+                $std->item  = $item;
+                $std->orig  = 0;
+                $std->CSOSN = ($regime === '2') ? '400' : '102';
+                $nfe->tagICMSSN($std);
+
+                // PIS (CST 49 - Outras Operações de Saída)
+                $std = new stdClass();
+                $std->item   = $item;
+                $std->CST    = '49';
+                $std->vBC    = '0.00';
+                $std->pPIS   = '0.0000';
+                $std->vPIS   = '0.00';
+                $nfe->tagPIS($std);
+
+                // COFINS (CST 49 - Outras Operações de Saída)
+                $std = new stdClass();
+                $std->item    = $item;
+                $std->CST     = '49';
+                $std->vBC     = '0.00';
+                $std->pCOFINS = '0.0000';
+                $std->vCOFINS = '0.00';
+                $nfe->tagCOFINS($std);
+            }
 
             // Acumuladores globais
-            $vbcGlobal     += $vTot;
-            $vicmsGlobal   += 0; // Nenhuma ST na nota SN102
-            $vpisGlobal    += $vPis;
-            $vcofinsGlobal += $vCofins;
-            $vprodGlobal   += $vTot;
+            $vbcGlobal   += ($regime === '3') ? $vTot : 0;
+            $vprodGlobal += $vTot;
         }
 
         // ── Totais ────────────────────────────────────────────────
@@ -356,12 +415,12 @@ class NFeController extends Controller
         $std->vSeg       = '0.00';
         $std->vDesc      = '0.00';
         $std->vII        = '0.00';
-        $std->vIPI       = '0.00';
+        $std->vIPI       = number_format($vipiGlobal, 2, '.', '');
         $std->vIPIDevol  = '0.00';
         $std->vPIS       = number_format($vpisGlobal, 2, '.', '');
         $std->vCOFINS    = number_format($vcofinsGlobal, 2, '.', '');
         $std->vOutro     = '0.00';
-        $std->vNF        = number_format($vprodGlobal, 2, '.', '');
+        $std->vNF        = number_format($vprodGlobal + $vipiGlobal, 2, '.', ''); // Total da nota soma o IPI além dos produtos
         $nfe->tagICMSTot($std);
 
         // ── Transporte ────────────────────────────────────────────
@@ -396,13 +455,28 @@ class NFeController extends Controller
             if (!$temCertificado) {
                 Setting::set('nfe_proxima_nnf', $proximaNNF + 1);
 
-                return response($xml, 200)
-                    ->header('Content-Type', 'text/xml')
-                    ->header('Content-Disposition', 'attachment; filename="nfe_teste_' . $proximaNNF . '.xml"');
+                $filename = 'nfe_teste_' . $proximaNNF . '.xml';
+                Storage::disk('local')->put('nfe_xmls/' . $filename, $xml);
+
+                return redirect()->back()
+                    ->with('success', 'NFe de Teste gerada com sucesso!')
+                    ->with('download_xml', route('nfe.download', $filename));
             }
 
             // ── Modo Produção (com certificado): Assinar e Enviar ─
             $xmlAssinado = $tools->signNFe($xml);
+
+            // ── Salvar Rascunho / Apenas Assinar (sem enviar para SEFAZ) ──
+            if ($request->boolean('is_draft')) {
+                Setting::set('nfe_proxima_nnf', $proximaNNF + 1);
+
+                $filename = 'nfe_' . $proximaNNF . '_rascunho_assinado.xml';
+                Storage::disk('local')->put('nfe_xmls/' . $filename, $xmlAssinado);
+
+                return redirect()->back()
+                    ->with('success', 'Rascunho assinado com sucesso! O XML foi gerado, mas não foi enviado à SEFAZ.')
+                    ->with('download_xml', route('nfe.download', $filename));
+            }
 
             // Enviar lote para a SEFAZ
             $idLote   = str_pad(random_int(1, 999999999999999), 15, '0', STR_PAD_LEFT);
@@ -433,10 +507,13 @@ class NFeController extends Controller
                     Setting::set('nfe_proxima_nnf', $proximaNNF + 1);
 
                     $xmlProtocolado = Complements::toAuthorize($xmlAssinado, $protocolo);
+                    
+                    $filename = 'nfe_' . $proximaNNF . '_autorizada.xml';
+                    Storage::disk('local')->put('nfe_xmls/' . $filename, $xmlProtocolado);
 
-                    return response($xmlProtocolado, 200)
-                        ->header('Content-Type', 'text/xml')
-                        ->header('Content-Disposition', 'attachment; filename="nfe_' . $proximaNNF . '_autorizada.xml"');
+                    return redirect()->back()
+                        ->with('success', 'NFe autorizada com sucesso!')
+                        ->with('download_xml', route('nfe.download', $filename));
                 }
 
                 return redirect()->back()->with('error', 'NF-e rejeitada pela Sefaz. <br>Motivo: ' . ($stdProt->protNFe->infProt->xMotivo ?? 'Desconhecido'));
@@ -450,5 +527,19 @@ class NFeController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Erro inesperado ao gerar/assinar o arquivo XML: ' . $e->getMessage());
         }
+    }
+
+    public function download(Request $request, $file)
+    {
+        if (!(auth()->user()->currentPlan()?->can_use_nfe ?? false)) {
+            abort(403);
+        }
+
+        $path = 'nfe_xmls/' . $file;
+        if (!Storage::disk('local')->exists($path)) {
+            abort(404, 'XML não encontrado.');
+        }
+
+        return Storage::disk('local')->download($path);
     }
 }

@@ -4,12 +4,26 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class CalendarController extends Controller
 {
     public function index()
     {
-        return view('calendar.index');
+        // For the initial load, we can pass the current month's tasks to Vue
+        // to avoid an immediate secondary API call.
+        $month = now()->month;
+        $year = now()->year;
+
+        $initialTasks = Task::where('user_id', auth()->id())
+            ->whereMonth('due_date', $month)
+            ->whereYear('due_date', $year)
+            ->orderBy('due_date')
+            ->get();
+
+        return Inertia::render('Calendar/Index', [
+            'initialTasks' => $initialTasks,
+        ]);
     }
 
     public function tasks(Request $request)

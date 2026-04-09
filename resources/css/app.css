@@ -7,6 +7,10 @@
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
+@source '../**/*.vue';
+/*Explain this line*/
+/*This line tells Tailwind CSS to look for Vue files in the resources/js/Pages directory and its subdirectories and import them into the CSS file. This is necessary because Vue files contain Tailwind classes that need to be processed by the Tailwind CSS compiler.*/
+
 
 @theme {
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';

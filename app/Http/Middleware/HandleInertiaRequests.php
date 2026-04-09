@@ -58,8 +58,11 @@ class HandleInertiaRequests extends Middleware
                 'user' => $userData,
             ],
             'flash' => [
-                'success' => fn () => $request->session()->get('success'),
-                'error' => fn () => $request->session()->get('error'),
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
+                'warning' => $request->session()->get('warning'),
+                'info' => $request->session()->get('info'),
+                'download_xml' => $request->session()->get('download_xml'),
             ],
             'csrf_token' => csrf_token(),
             'setting' => [

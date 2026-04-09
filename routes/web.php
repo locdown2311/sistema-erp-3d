@@ -61,6 +61,7 @@ Route::middleware('auth')->group(function () {
     // NFe - Protótipo
     Route::get('nfe', [\App\Http\Controllers\NFeController::class, 'index'])->name('nfe.index');
     Route::post('nfe/emitir', [\App\Http\Controllers\NFeController::class, 'emit'])->name('nfe.emit');
+    Route::get('nfe/download/{file}', [\App\Http\Controllers\NFeController::class, 'download'])->name('nfe.download');
 
     // Planos e Assinaturas
     Route::get('planos', [PlanController::class, 'index'])->name('plans.index');
